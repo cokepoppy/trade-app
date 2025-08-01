@@ -130,6 +130,40 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  const loginByPhone = async (phone: string, smsCode: string) => {
+    try {
+      loading.value = true
+      error.value = null
+      
+      const response = await userService.loginByPhone(phone, smsCode)
+      const { token: newToken, refreshToken: newRefreshToken, userInfo } = response.data
+      
+      token.value = newToken
+      refreshToken.value = newRefreshToken
+      user.value = userInfo
+      isAuthenticated.value = true
+      lastLoginTime.value = Date.now()
+      
+      storage.set(storageKeys.USER_TOKEN, newToken)
+      storage.set(storageKeys.USER_INFO, userInfo)
+      storage.set(storageKeys.LAST_LOGIN, Date.now())
+      
+      await Promise.all([
+        fetchUserProfile(),
+        fetchUserSettings(),
+        fetchUserDevices()
+      ])
+      
+      return response.data
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '手机号登录失败'
+      console.error('Login by phone error:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   const logout = async () => {
     try {
       if (token.value) {
@@ -475,6 +509,7 @@ export const useUserStore = defineStore('user', () => {
     recentActivities,
     initialize,
     login,
+    loginByPhone,
     logout,
     register,
     refreshTokenIfNeeded,

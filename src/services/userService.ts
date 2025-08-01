@@ -89,6 +89,16 @@ export const userService = {
     return response.data
   },
 
+  async loginByPhone(phone: string, smsCode: string): Promise<ApiResponse<any>> {
+    const response = await apiClient.post('/user/login-by-phone', { phone, smsCode })
+    return response.data
+  },
+
+  async getCaptcha(): Promise<ApiResponse<any>> {
+    const response = await apiClient.get('/user/captcha')
+    return response.data
+  },
+
   async logout(): Promise<ApiResponse<any>> {
     const response = await apiClient.post('/user/logout')
     return response.data
