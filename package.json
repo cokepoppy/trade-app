@@ -50,9 +50,10 @@
     "@dcloudio/uni-mp-weixin": "3.0.0-4030620241128001",
     "@dcloudio/uni-mp-xhs": "3.0.0-4030620241128001",
     "@dcloudio/uni-quickapp-webview": "3.0.0-4030620241128001",
+    "@rollup/rollup-linux-x64-gnu": "^4.46.2",
     "axios": "^1.11.0",
     "dayjs": "^1.11.13",
-    "pinia": "^3.0.3",
+    "pinia": "^2.1.7",
     "vue": "^3.4.21",
     "vue-i18n": "^9.1.9"
   },

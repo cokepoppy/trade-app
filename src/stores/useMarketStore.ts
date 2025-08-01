@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { 
   MarketIndex, 
   Stock, 
@@ -12,6 +12,8 @@ import type {
   MarketNews
 } from '@/types'
 import { marketService } from '@/services/marketService'
+import { createMarketDataManager } from '@/services/marketDataManager'
+import type { StockQuoteUpdate, IndexUpdate } from '@/types/websocket'
 
 export const useMarketStore = defineStore('market', () => {
   const indices = ref<MarketIndex[]>([])
@@ -25,6 +27,12 @@ export const useMarketStore = defineStore('market', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const lastUpdate = ref<number>(0)
+  
+  // WebSocket and real-time data
+  const marketDataManager = ref<any>(null)
+  const realTimeEnabled = ref(true)
+  const connectionStatus = ref<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected')
+  const wsStats = ref<any>(null)
 
   const isMarketOpen = computed(() => {
     return marketStatus.value?.isTradingTime || false
@@ -52,10 +60,23 @@ export const useMarketStore = defineStore('market', () => {
     return rankings.value['volume']?.stocks.slice(0, 10) || []
   })
 
+  const isConnected = computed(() => {
+    return connectionStatus.value === 'connected'
+  })
+
+  const totalSubscriptions = computed(() => {
+    return wsStats.value?.subscriptions || 0
+  })
+
   const initialize = async () => {
     try {
       loading.value = true
       error.value = null
+      
+      // Initialize WebSocket connection for real-time data
+      if (realTimeEnabled.value) {
+        initializeWebSocket()
+      }
       
       await Promise.all([
         fetchMarketStatus(),
@@ -71,6 +92,68 @@ export const useMarketStore = defineStore('market', () => {
       console.error('Market store initialization error:', err)
     } finally {
       loading.value = false
+    }
+  }
+
+  const initializeWebSocket = () => {
+    try {
+      connectionStatus.value = 'connecting'
+      
+      marketDataManager.value = createMarketDataManager({
+        enabled: realTimeEnabled.value,
+        url: import.meta.env.VITE_WS_URL || 'ws://localhost:3001',
+        reconnectInterval: 3000,
+        maxReconnectAttempts: 10,
+        heartbeatInterval: 30000,
+        enableLogging: import.meta.env.DEV,
+        defaultSubscriptions: {
+          indices: ['000001', '000002', '000300', '399001', '399006'],
+          hotStocks: true,
+          userPositions: true
+        }
+      })
+      
+      const { connect, disconnect, stats, subscribe } = marketDataManager.value.initialize()
+      
+      // Set up connection callbacks
+      const enhancedConnect = () => {
+        connectionStatus.value = 'connected'
+        console.log('[MarketStore] WebSocket connected')
+        connect()
+      }
+      
+      const enhancedDisconnect = () => {
+        connectionStatus.value = 'disconnected'
+        console.log('[MarketStore] WebSocket disconnected')
+        disconnect()
+      }
+      
+      // Store methods for later use
+      marketDataManager.value.connect = enhancedConnect
+      marketDataManager.value.disconnect = enhancedDisconnect
+      marketDataManager.value.subscribe = subscribe
+      marketDataManager.value.stats = stats
+      
+      // Connect immediately
+      enhancedConnect()
+      
+      // Set up stats polling
+      const statsInterval = setInterval(() => {
+        if (stats) {
+          wsStats.value = stats
+        }
+      }, 1000)
+      
+      // Clean up on unmount
+      onUnmounted(() => {
+        clearInterval(statsInterval)
+        enhancedDisconnect()
+      })
+      
+    } catch (err) {
+      connectionStatus.value = 'error'
+      error.value = err instanceof Error ? err.message : 'WebSocket连接失败'
+      console.error('WebSocket initialization error:', err)
     }
   }
 
@@ -249,6 +332,79 @@ export const useMarketStore = defineStore('market', () => {
     loading.value = false
     error.value = null
     lastUpdate.value = 0
+    connectionStatus.value = 'disconnected'
+    wsStats.value = null
+    
+    // Clean up WebSocket connection
+    if (marketDataManager.value) {
+      marketDataManager.value.cleanup()
+      marketDataManager.value = null
+    }
+  }
+
+  // Real-time subscription methods
+  const subscribeToStocks = (codes: string[], callback?: Function) => {
+    if (marketDataManager.value) {
+      return marketDataManager.value.subscribeToStocks(codes, callback)
+    }
+    return ''
+  }
+
+  const subscribeToIndices = (codes: string[], callback?: Function) => {
+    if (marketDataManager.value) {
+      return marketDataManager.value.subscribeToIndices(codes, callback)
+    }
+    return ''
+  }
+
+  const subscribeToMarketData = (types: string[], callback?: Function) => {
+    if (marketDataManager.value) {
+      return marketDataManager.value.subscribeToMarketData(types, callback)
+    }
+    return ''
+  }
+
+  const unsubscribe = (subscriptionKey: string) => {
+    if (marketDataManager.value) {
+      marketDataManager.value.unsubscribe(subscriptionKey)
+    }
+  }
+
+  const setPriceAlert = (code: string, condition: 'above' | 'below' | 'equals', targetPrice: number, callback: Function) => {
+    if (marketDataManager.value) {
+      return marketDataManager.value.setPriceAlert(code, condition, targetPrice, callback)
+    }
+    return () => {}
+  }
+
+  const toggleRealTime = (enabled: boolean) => {
+    realTimeEnabled.value = enabled
+    if (enabled && !marketDataManager.value) {
+      initializeWebSocket()
+    } else if (!enabled && marketDataManager.value) {
+      marketDataManager.value.cleanup()
+      marketDataManager.value = null
+      connectionStatus.value = 'disconnected'
+    }
+  }
+
+  const getSubscriptionStatus = () => {
+    if (marketDataManager.value) {
+      return marketDataManager.value.getSubscriptionStatus()
+    }
+    return {
+      total: 0,
+      subscriptions: [],
+      callbacks: 0
+    }
+  }
+
+  const reconnectWebSocket = () => {
+    if (marketDataManager.value) {
+      marketDataManager.value.connect()
+    } else if (realTimeEnabled.value) {
+      initializeWebSocket()
+    }
   }
 
   return {
@@ -263,12 +419,21 @@ export const useMarketStore = defineStore('market', () => {
     loading,
     error,
     lastUpdate,
+    // WebSocket and real-time state
+    marketDataManager,
+    realTimeEnabled,
+    connectionStatus,
+    wsStats,
+    // Computed properties
     isMarketOpen,
+    isConnected,
+    totalSubscriptions,
     mainIndices,
     sectorIndices,
     topGainers,
     topLosers,
     topVolume,
+    // Core methods
     initialize,
     fetchMarketStatus,
     fetchIndices,
@@ -286,6 +451,15 @@ export const useMarketStore = defineStore('market', () => {
     searchStocks,
     getMarketCalendar,
     clearError,
-    reset
+    reset,
+    // Real-time methods
+    subscribeToStocks,
+    subscribeToIndices,
+    subscribeToMarketData,
+    unsubscribe,
+    setPriceAlert,
+    toggleRealTime,
+    getSubscriptionStatus,
+    reconnectWebSocket
   }
 })

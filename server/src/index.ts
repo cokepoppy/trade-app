@@ -8,6 +8,8 @@ import compression from 'compression';
 console.log('compression 导入成功');
 import rateLimit from 'express-rate-limit';
 console.log('express-rate-limit 导入成功');
+import { createServer } from 'http';
+console.log('http server 导入成功');
 import config from './config';
 console.log('config 导入成功');
 import logger from './utils/logger';
@@ -20,17 +22,23 @@ import { errorHandler } from './middleware/errorHandler';
 console.log('errorHandler 导入成功');
 import { requestLogger } from './middleware/requestLogger';
 console.log('requestLogger 导入成功');
+import { MarketDataWebSocketServer } from './websocket/marketDataServer';
+console.log('MarketDataWebSocketServer 导入成功');
 console.log('🔧 Starting server initialization...');
 
 class App {
   public app: express.Application;
   public port: number;
+  public server: any;
+  public wsServer: MarketDataWebSocketServer;
 
   constructor() {
     console.log('🏗️  Creating Express app...');
     this.app = express();
     this.port = config.app.port;
     console.log(`📡 Configured port: ${this.port}`);
+    this.server = createServer(this.app);
+    this.wsServer = new MarketDataWebSocketServer(this.server);
     this.setupMiddleware();
     this.setupRoutes();
     this.setupErrorHandling();
@@ -177,18 +185,31 @@ class App {
   /**
    * 启动服务器
    */
-  public start(): void {
-    this.app.listen(this.port, () => {
-      logger.info(`服务器启动成功`, {
-        port: this.port,
-        environment: config.app.env,
-        apiPrefix: config.app.apiPrefix,
-      });
+  public async start(): Promise<void> {
+    try {
+      // Initialize WebSocket server
+      console.log('🔌 Initializing WebSocket server...');
+      await this.wsServer.initialize();
+      
+      this.server.listen(this.port, () => {
+        logger.info(`服务器启动成功`, {
+          port: this.port,
+          environment: config.app.env,
+          apiPrefix: config.app.apiPrefix,
+          webSocket: 'enabled'
+        });
 
-      console.log('🚀 Starting server...');
-      // 打印路由信息
-      this.printRoutes();
-    });
+        console.log('🚀 Starting server...');
+        // 打印路由信息
+        this.printRoutes();
+        
+        // Print WebSocket stats
+        console.log('📊 WebSocket Server Stats:', this.wsServer.getStats());
+      });
+    } catch (error) {
+      console.error('❌ Failed to start server:', error);
+      throw error;
+    }
   }
 
   /**
