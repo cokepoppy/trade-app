@@ -1,0 +1,137 @@
+{
+  "pages": [
+    //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "股票交易",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/market/index",
+      "style": {
+        "navigationBarTitleText": "行情",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/trade/index",
+      "style": {
+        "navigationBarTitleText": "交易",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/trade/positions",
+      "style": {
+        "navigationBarTitleText": "持仓管理",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/trade/orders",
+      "style": {
+        "navigationBarTitleText": "委托管理",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/trade/deals",
+      "style": {
+        "navigationBarTitleText": "成交记录",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/trade/funds",
+      "style": {
+        "navigationBarTitleText": "资金管理",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/news/index",
+      "style": {
+        "navigationBarTitleText": "资讯",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/market/search",
+      "style": {
+        "navigationBarTitleText": "搜索",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/market/detail",
+      "style": {
+        "navigationBarTitleText": "股票详情",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    }
+  ],
+  "tabBar": {
+    "color": "#666",
+    "selectedColor": "#1890ff",
+    "backgroundColor": "#fff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/market/index",
+        "text": "行情",
+        "iconPath": "static/tabbar/market.png",
+        "selectedIconPath": "static/tabbar/market-active.png"
+      },
+      {
+        "pagePath": "pages/trade/index",
+        "text": "交易",
+        "iconPath": "static/tabbar/trade.png",
+        "selectedIconPath": "static/tabbar/trade-active.png"
+      },
+      {
+        "pagePath": "pages/news/index",
+        "text": "资讯",
+        "iconPath": "static/tabbar/news.png",
+        "selectedIconPath": "static/tabbar/news-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "static/tabbar/profile.png",
+        "selectedIconPath": "static/tabbar/profile-active.png"
+      }
+    ]
+  },
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "股票交易",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  }
+}
