@@ -1,190 +1,203 @@
 <template>
   <view class="login-container">
-    <!-- Logo区域 -->
-    <view class="logo-section">
-      <image 
-        src="/static/logo.png" 
-        class="logo" 
-        mode="aspectFit"
-      />
-      <text class="app-name">股票交易</text>
-      <text class="app-slogan">专业证券交易平台</text>
-    </view>
-
-    <!-- 登录方式切换 -->
-    <view class="login-type-switch">
-      <view 
-        v-for="type in loginTypes" 
-        :key="type.value"
-        class="login-type-item"
-        :class="{ active: currentLoginType === type.value }"
-        @tap="switchLoginType(type.value as 'username' | 'phone')"
-      >
-        {{ type.label }}
-      </view>
-    </view>
-
-    <!-- 登录表单 -->
-    <view class="login-form">
-      <!-- 用户名登录 -->
-      <view v-if="currentLoginType === 'username'" class="form-section">
-        <view class="input-group">
-          <uni-icons type="person" size="20" color="#666"></uni-icons>
-          <input
-            v-model="form.username"
-            type="text"
-            placeholder="请输入用户名"
-            class="form-input"
-            :class="{ error: validation.username }"
-            @input="validateField('username')"
-            @keypress="handleKeyPress"
-          />
-        </view>
-        <text v-if="validation.username" class="error-text">
-          {{ validationMessages.username }}
-        </text>
-
-        <view class="input-group">
-          <uni-icons type="locked" size="20" color="#666"></uni-icons>
-          <input
-            v-model="form.password"
-            :type="showPassword ? 'text' : 'password'"
-            placeholder="请输入密码"
-            class="form-input"
-            :class="{ error: validation.password }"
-            @input="validateField('password')"
-            @keypress="handleKeyPress"
-          />
-          <uni-icons 
-            :type="showPassword ? 'eye' : 'eye-slash'" 
-            size="20" 
-            color="#666"
-            @tap="togglePassword"
-          ></uni-icons>
-        </view>
-        <text v-if="validation.password" class="error-text">
-          {{ validationMessages.password }}
-        </text>
-
-        <view class="input-group captcha-group">
-          <input
-            v-model="form.captcha"
-            type="text"
-            placeholder="请输入验证码"
-            class="form-input captcha-input"
-            :class="{ error: validation.captcha }"
-            @input="validateField('captcha')"
-            @keypress="handleKeyPress"
-          />
-          <image 
-            :src="captchaImage" 
-            class="captcha-image"
-            @tap="refreshCaptcha"
-          />
-          <uni-icons 
-            type="refresh" 
-            size="20" 
-            color="#666"
-            @tap="refreshCaptcha"
-          ></uni-icons>
-        </view>
-        <text v-if="validation.captcha" class="error-text">
-          {{ validationMessages.captcha }}
-        </text>
+    <!-- 登录卡片 -->
+    <view class="login-card">
+      <!-- Logo区域 -->
+      <view class="login-header">
+        <image 
+          src="/static/logo.png" 
+          class="login-logo" 
+          mode="aspectFit"
+        />
+        <text class="login-title">股票交易</text>
+        <text class="login-subtitle">专业证券交易平台</text>
       </view>
 
-      <!-- 手机号登录 -->
-      <view v-if="currentLoginType === 'phone'" class="form-section">
-        <view class="input-group">
-          <uni-icons type="phone" size="20" color="#666"></uni-icons>
-          <input
-            v-model="form.phone"
-            type="tel"
-            placeholder="请输入手机号"
-            class="form-input"
-            :class="{ error: validation.phone }"
-            @input="validateField('phone')"
-            @keypress="handleKeyPress"
-          />
+      <!-- 登录方式切换 -->
+      <view class="login-type-switch">
+        <view 
+          v-for="type in loginTypes" 
+          :key="type.value"
+          class="login-type-item"
+          :class="{ active: currentLoginType === type.value }"
+          @tap="switchLoginType(type.value as 'username' | 'phone')"
+        >
+          {{ type.label }}
         </view>
-        <text v-if="validation.phone" class="error-text">
-          {{ validationMessages.phone }}
-        </text>
-
-        <view class="input-group captcha-group">
-          <input
-            v-model="form.smsCode"
-            type="text"
-            placeholder="请输入验证码"
-            class="form-input captcha-input"
-            :class="{ error: validation.smsCode }"
-            @input="validateField('smsCode')"
-            @keypress="handleKeyPress"
-          />
-          <button
-            class="sms-code-btn"
-            :class="{ disabled: smsCountdown > 0 }"
-            :disabled="smsCountdown > 0 || !isPhoneValid"
-            @tap="sendSmsCode"
-          >
-            {{ smsCountdown > 0 ? `${smsCountdown}s` : '获取验证码' }}
-          </button>
-        </view>
-        <text v-if="validation.smsCode" class="error-text">
-          {{ validationMessages.smsCode }}
-        </text>
       </view>
 
-      <!-- 选项区域 -->
-      <view class="options-section">
-        <label class="checkbox-item">
-          <checkbox 
-            v-model="rememberPassword" 
-            color="#1890ff"
-          />
-          <text>记住密码</text>
-        </label>
-        <label class="checkbox-item">
-          <checkbox 
-            v-model="autoLogin" 
-            color="#1890ff"
-          />
-          <text>自动登录</text>
-        </label>
-      </view>
-
-      <!-- 登录按钮 -->
-      <button
-        class="login-btn"
-        :class="{ disabled: !isFormValid || loading }"
-        :disabled="!isFormValid || loading"
-        @tap="handleLogin"
-      >
-        <text v-if="!loading">登录</text>
-        <view v-else class="loading-spinner">
-          <view class="spinner"></view>
-        </view>
-      </button>
-
-      <!-- 辅助链接 -->
-      <view class="helper-links">
-        <text class="link-item" @tap="goToForgotPassword">忘记密码？</text>
-        <text class="link-item" @tap="goToRegister">新用户注册</text>
-      </view>
-
-      <!-- 其他登录方式 -->
-      <view class="other-login">
-        <view class="divider">
-          <text class="divider-text">其他登录方式</text>
-        </view>
-        <view class="social-login">
-          <view class="social-item" @tap="wechatLogin">
-            <uni-icons type="weixin" size="24" color="#07c160"></uni-icons>
-            <text>微信</text>
+      <!-- 登录表单 -->
+      <view class="login-form">
+        <!-- 用户名登录 -->
+        <view v-if="currentLoginType === 'username'" class="form-section">
+          <view class="form-group">
+            <view class="input-group">
+              <uni-icons type="person" size="20" color="#666"></uni-icons>
+              <input
+                v-model="form.username"
+                type="text"
+                placeholder="请输入用户名"
+                class="form-input"
+                :class="{ error: validation.username }"
+                @input="validateField('username')"
+                @keypress="handleKeyPress"
+              />
+            </view>
+            <text v-if="validation.username" class="form-error">
+              {{ validationMessages.username }}
+            </text>
           </view>
-          <view class="social-item" @tap="alipayLogin">
-            <uni-icons type="checkmarkempty" size="24" color="#1677ff"></uni-icons>
-            <text>支付宝</text>
+
+          <view class="form-group">
+            <view class="input-group">
+              <uni-icons type="locked" size="20" color="#666"></uni-icons>
+              <input
+                v-model="form.password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="请输入密码"
+                class="form-input"
+                :class="{ error: validation.password }"
+                @input="validateField('password')"
+                @keypress="handleKeyPress"
+              />
+              <uni-icons 
+                :type="showPassword ? 'eye' : 'eye-slash'" 
+                size="20" 
+                color="#666"
+                @tap="togglePassword"
+              ></uni-icons>
+            </view>
+            <text v-if="validation.password" class="form-error">
+              {{ validationMessages.password }}
+            </text>
+          </view>
+
+          <view class="form-group">
+            <view class="input-group captcha-group">
+              <input
+                v-model="form.captcha"
+                type="text"
+                placeholder="请输入验证码"
+                class="form-input captcha-input"
+                :class="{ error: validation.captcha }"
+                @input="validateField('captcha')"
+                @keypress="handleKeyPress"
+              />
+              <image 
+                :src="captchaImage" 
+                class="captcha-image"
+                @tap="refreshCaptcha"
+              />
+              <uni-icons 
+                type="refresh" 
+                size="20" 
+                color="#666"
+                @tap="refreshCaptcha"
+              ></uni-icons>
+            </view>
+            <text v-if="validation.captcha" class="form-error">
+              {{ validationMessages.captcha }}
+            </text>
+          </view>
+        </view>
+
+        <!-- 手机号登录 -->
+        <view v-if="currentLoginType === 'phone'" class="form-section">
+          <view class="form-group">
+            <view class="input-group">
+              <uni-icons type="phone" size="20" color="#666"></uni-icons>
+              <input
+                v-model="form.phone"
+                type="tel"
+                placeholder="请输入手机号"
+                class="form-input"
+                :class="{ error: validation.phone }"
+                @input="validateField('phone')"
+                @keypress="handleKeyPress"
+              />
+            </view>
+            <text v-if="validation.phone" class="form-error">
+              {{ validationMessages.phone }}
+            </text>
+          </view>
+
+          <view class="form-group">
+            <view class="input-group captcha-group">
+              <input
+                v-model="form.smsCode"
+                type="text"
+                placeholder="请输入验证码"
+                class="form-input captcha-input"
+                :class="{ error: validation.smsCode }"
+                @input="validateField('smsCode')"
+                @keypress="handleKeyPress"
+              />
+              <button
+                class="sms-code-btn"
+                :class="{ disabled: smsCountdown > 0 }"
+                :disabled="smsCountdown > 0 || !isPhoneValid"
+                @tap="sendSmsCode"
+              >
+                {{ smsCountdown > 0 ? `${smsCountdown}s` : '获取验证码' }}
+              </button>
+            </view>
+            <text v-if="validation.smsCode" class="form-error">
+              {{ validationMessages.smsCode }}
+            </text>
+          </view>
+        </view>
+
+        <!-- 选项区域 -->
+        <view class="options-section">
+          <label class="checkbox-item">
+            <checkbox 
+              v-model="rememberPassword" 
+              color="#1890ff"
+            />
+            <text>记住密码</text>
+          </label>
+          <label class="checkbox-item">
+            <checkbox 
+              v-model="autoLogin" 
+              color="#1890ff"
+            />
+            <text>自动登录</text>
+          </label>
+        </view>
+
+        <!-- 登录按钮 -->
+        <button
+          class="login-btn"
+          :class="{ disabled: !isFormValid || loading }"
+          :disabled="!isFormValid || loading"
+          @tap="handleLogin"
+        >
+          <text v-if="!loading">登录</text>
+          <view v-else class="loading-spinner">
+            <view class="spinner"></view>
+          </view>
+        </button>
+
+        <!-- 辅助链接 -->
+        <view class="helper-links">
+          <text class="link-item" @tap="goToForgotPassword">忘记密码？</text>
+          <text class="link-item" @tap="goToRegister">新用户注册</text>
+        </view>
+
+        <!-- 其他登录方式 -->
+        <view class="other-login">
+          <view class="divider">
+            <text class="divider-text">其他登录方式</text>
+          </view>
+          <view class="social-login">
+            <view class="social-item" @tap="wechatLogin">
+              <uni-icons type="weixin" size="24" color="#07c160"></uni-icons>
+              <text>微信</text>
+            </view>
+            <view class="social-item" @tap="alipayLogin">
+              <uni-icons type="checkmarkempty" size="24" color="#1677ff"></uni-icons>
+              <text>支付宝</text>
+            </view>
           </view>
         </view>
       </view>
@@ -548,39 +561,52 @@ const alipayLogin = () => {
 <style scoped>
 .login-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 40px 24px;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
 }
 
-.logo-section {
+.login-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  width: 100%;
+  max-width: 320px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.login-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
-.logo {
-  width: 80px;
-  height: 80px;
+.login-logo {
+  width: 64px;
+  height: 64px;
   margin-bottom: 16px;
 }
 
-.app-name {
+.login-title {
   display: block;
-  font-size: 24px;
-  font-weight: bold;
-  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
   margin-bottom: 8px;
 }
 
-.app-slogan {
+.login-subtitle {
   display: block;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #666;
 }
 
 .login-type-switch {
   display: flex;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
   padding: 4px;
   margin-bottom: 24px;
 }
@@ -589,38 +615,45 @@ const alipayLogin = () => {
   flex: 1;
   text-align: center;
   padding: 12px;
-  border-radius: 6px;
-  color: rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  color: #666;
   font-size: 14px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .login-type-item.active {
-  background: #fff;
-  color: #333;
+  background-color: #1890ff;
+  color: #ffffff;
   font-weight: 500;
 }
 
 .login-form {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .form-section {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .input-group {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  background: #fff;
-  transition: all 0.3s ease;
+  padding: 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
 }
 
 .input-group:focus-within {
@@ -639,6 +672,7 @@ const alipayLogin = () => {
   font-size: 14px;
   color: #333;
   margin-left: 12px;
+  background: transparent;
 }
 
 .form-input::placeholder {
@@ -650,19 +684,20 @@ const alipayLogin = () => {
 }
 
 .captcha-group {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .captcha-input {
   flex: 1;
-  margin-right: 12px;
 }
 
 .captcha-image {
   width: 80px;
   height: 40px;
   border-radius: 4px;
-  margin-right: 8px;
+  border: 1px solid #d9d9d9;
 }
 
 .sms-code-btn {
@@ -673,24 +708,30 @@ const alipayLogin = () => {
   color: #fff;
   font-size: 12px;
   white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.sms-code-btn:hover {
+  background: #40a9ff;
 }
 
 .sms-code-btn.disabled {
-  background: #ccc;
+  background: #d9d9d9;
+  color: #999;
   cursor: not-allowed;
 }
 
-.error-text {
+.form-error {
   color: #ff4d4f;
   font-size: 12px;
   margin-top: 4px;
-  margin-bottom: 8px;
 }
 
 .options-section {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
 .checkbox-item {
@@ -698,6 +739,7 @@ const alipayLogin = () => {
   align-items: center;
   font-size: 12px;
   color: #666;
+  cursor: pointer;
 }
 
 .checkbox-item text {
@@ -708,21 +750,26 @@ const alipayLogin = () => {
   width: 100%;
   padding: 16px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #1890ff;
   color: #fff;
   font-size: 16px;
   font-weight: 500;
-  margin-bottom: 16px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .login-btn:hover {
   background: #40a9ff;
 }
 
+.login-btn:active {
+  opacity: 0.8;
+}
+
 .login-btn.disabled {
-  background: #ccc;
+  background: #d9d9d9;
+  color: #999;
   cursor: not-allowed;
 }
 
@@ -757,10 +804,15 @@ const alipayLogin = () => {
   color: #1890ff;
   font-size: 12px;
   text-decoration: none;
+  cursor: pointer;
+}
+
+.link-item:hover {
+  text-decoration: underline;
 }
 
 .other-login {
-  margin-top: 24px;
+  margin-top: 16px;
 }
 
 .divider {
@@ -776,11 +828,11 @@ const alipayLogin = () => {
   left: 0;
   right: 0;
   height: 1px;
-  background: #e0e0e0;
+  background: #f0f0f0;
 }
 
 .divider-text {
-  background: rgba(255, 255, 255, 0.95);
+  background: #ffffff;
   padding: 0 12px;
   font-size: 12px;
   color: #999;
@@ -801,6 +853,11 @@ const alipayLogin = () => {
   color: #666;
   font-size: 12px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.social-item:hover {
+  color: #1890ff;
 }
 
 .social-item:active {
