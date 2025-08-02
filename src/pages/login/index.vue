@@ -1,5 +1,6 @@
 <template>
-  <view class="login-container">
+  <view class="app-container">
+    <view class="login-container">
     <!-- 登录卡片 -->
     <view class="login-card">
       <!-- Logo区域 -->
@@ -240,6 +241,7 @@
 
     <!-- Loading组件 -->
     <Loading :visible="loading" text="登录中..." />
+  </view>
   </view>
 </template>
 
@@ -638,6 +640,23 @@ const alipayLogin = () => {
   justify-content: center;
   align-items: center;
   padding: 16px;
+}
+
+/* 移动端容器样式 */
+@media (max-width: 768px) {
+  .app-container {
+    width: 100%;
+  }
+}
+
+@media (min-width: 769px) {
+  .app-container {
+    max-width: 414px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    min-height: 100vh;
+    position: relative;
+  }
 }
 
 .login-card {

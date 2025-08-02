@@ -1,39 +1,41 @@
 <template>
-  <view class="home-container">
-    <Header />
-    
-    <view class="home-content">
-      <MarketIndices />
-      <QuickActions />
-      <Watchlist />
+  <view class="app-container">
+    <view class="home-container">
+      <Header />
       
-      <view class="market-hotspots">
-        <view class="section-header">
-          <text class="section-title">市场热点</text>
-          <text class="view-all" @tap="navigateToMarket">查看全部</text>
-        </view>
+      <view class="home-content">
+        <MarketIndices />
+        <QuickActions />
+        <Watchlist />
         
-        <view class="hotspots-list">
-          <view 
-            v-for="hotspot in marketHotspots" 
-            :key="hotspot.id" 
-            class="hotspot-item"
-            @tap="handleHotspotClick(hotspot)"
-          >
-            <view class="hotspot-info">
-              <text class="hotspot-title">{{ hotspot.title }}</text>
-              <text class="hotspot-desc">{{ hotspot.description }}</text>
-            </view>
-            <view class="hotspot-meta">
-              <text class="hotspot-time">{{ formatRelativeTime(hotspot.timestamp) }}</text>
-              <text class="hotspot-count">{{ hotspot.readCount }}阅读</text>
+        <view class="market-hotspots">
+          <view class="section-header">
+            <text class="section-title">市场热点</text>
+            <text class="view-all" @tap="navigateToMarket">查看全部</text>
+          </view>
+          
+          <view class="hotspots-list">
+            <view 
+              v-for="hotspot in marketHotspots" 
+              :key="hotspot.id" 
+              class="hotspot-item"
+              @tap="handleHotspotClick(hotspot)"
+            >
+              <view class="hotspot-info">
+                <text class="hotspot-title">{{ hotspot.title }}</text>
+                <text class="hotspot-desc">{{ hotspot.description }}</text>
+              </view>
+              <view class="hotspot-meta">
+                <text class="hotspot-time">{{ formatRelativeTime(hotspot.timestamp) }}</text>
+                <text class="hotspot-count">{{ hotspot.readCount }}阅读</text>
+              </view>
             </view>
           </view>
         </view>
       </view>
+      
+      <Footer />
     </view>
-    
-    <Footer />
   </view>
 </template>
 

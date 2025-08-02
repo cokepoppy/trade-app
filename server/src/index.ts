@@ -192,7 +192,7 @@ class App {
       await this.wsServer.initialize();
       
       return new Promise((resolve, reject) => {
-        this.server.listen(this.port, () => {
+        this.server.listen(this.port, '0.0.0.0', () => {
           logger.info(`服务器启动成功`, {
             port: this.port,
             environment: config.app.env,
@@ -207,12 +207,34 @@ class App {
           // Print WebSocket stats
           console.log('📊 WebSocket Server Stats:', this.wsServer.getStats());
           
+          // Keep the server running
+          this.server.on('close', () => {
+            console.log('🔌 Server closed');
+          });
+          
           resolve();
         });
         
         this.server.on('error', (error) => {
           console.error('❌ Server error:', error);
           reject(error);
+        });
+        
+        // Handle process termination
+        process.on('SIGINT', () => {
+          console.log('🛑 Received SIGINT, shutting down gracefully...');
+          this.server.close(() => {
+            console.log('✅ Server closed');
+            process.exit(0);
+          });
+        });
+        
+        process.on('SIGTERM', () => {
+          console.log('🛑 Received SIGTERM, shutting down gracefully...');
+          this.server.close(() => {
+            console.log('✅ Server closed');
+            process.exit(0);
+          });
         });
       });
     } catch (error) {

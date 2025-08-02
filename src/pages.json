@@ -97,6 +97,14 @@
         "navigationBarBackgroundColor": "#1890ff",
         "navigationBarTextStyle": "white"
       }
+    },
+    {
+      "path": "pages/test-mobile/index",
+      "style": {
+        "navigationBarTitleText": "移动端测试",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
     }
   ],
   "tabBar": {
@@ -141,6 +149,16 @@
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "股票交易",
     "navigationBarBackgroundColor": "#F8F8F8",
-    "backgroundColor": "#F8F8F8"
+    "backgroundColor": "#F8F8F8",
+    "navigationStyle": "custom",
+    "mp-weixin": {
+      "enablePullDownRefresh": false
+    },
+    "h5": {
+      "titleNView": false,
+      "pullToRefresh": {
+        "style": "circle"
+      }
+    }
   }
 }

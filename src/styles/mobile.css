@@ -1,0 +1,316 @@
+/* 移动端适配样式 */
+
+/* 基础重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 设置 viewport 和基础样式 */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  background-color: #f5f5f5;
+}
+
+/* 移动端容器限制 */
+.page-container {
+  max-width: 100vw;
+  margin: 0 auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* 防止横向滚动 */
+body, html {
+  overflow-x: hidden;
+  width: 100vw;
+}
+
+/* 移动端字体大小适配 */
+@media screen and (max-width: 375px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 320px) {
+  html {
+    font-size: 12px;
+  }
+}
+
+/* 通用移动端样式 */
+.mobile-only {
+  display: block;
+}
+
+.pc-only {
+  display: none;
+}
+
+/* 触摸优化 */
+button, .clickable {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 输入框样式优化 */
+input, textarea {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0;
+  outline: none;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+}
+
+/* 防止iOS输入框缩放 */
+input[type="text"], 
+input[type="password"], 
+input[type="tel"], 
+input[type="email"], 
+input[type="number"], 
+textarea {
+  font-size: 16px !important;
+  transform: scale(1);
+}
+
+/* 安全区域适配 */
+.safe-area-bottom {
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-top {
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-left {
+  padding-left: constant(safe-area-inset-left);
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: constant(safe-area-inset-right);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* 1px 边框解决方案 */
+.hairline, .hairline-top, .hairline-bottom, .hairline-left, .hairline-right {
+  position: relative;
+}
+
+.hairline::after, .hairline-top::after, .hairline-bottom::after, 
+.hairline-left::after, .hairline-right::after {
+  content: '';
+  position: absolute;
+  background-color: #e8e8e8;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.hairline::after {
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  border: 1px solid #e8e8e8;
+  transform: scale(0.5);
+}
+
+.hairline-top::after {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  transform: scaleY(0.5);
+}
+
+.hairline-bottom::after {
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  transform: scaleY(0.5);
+}
+
+.hairline-left::after {
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  transform: scaleX(0.5);
+}
+
+.hairline-right::after {
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  transform: scaleX(0.5);
+}
+
+/* Flex布局工具类 */
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-around {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+/* 文本工具类 */
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-ellipsis-2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* 间距工具类 */
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 16px; }
+.mt-5 { margin-top: 20px; }
+
+.mb-1 { margin-bottom: 4px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-3 { margin-bottom: 12px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-5 { margin-bottom: 20px; }
+
+.ml-1 { margin-left: 4px; }
+.ml-2 { margin-left: 8px; }
+.ml-3 { margin-left: 12px; }
+.ml-4 { margin-left: 16px; }
+.ml-5 { margin-left: 20px; }
+
+.mr-1 { margin-right: 4px; }
+.mr-2 { margin-right: 8px; }
+.mr-3 { margin-right: 12px; }
+.mr-4 { margin-right: 16px; }
+.mr-5 { margin-right: 20px; }
+
+.p-1 { padding: 4px; }
+.p-2 { padding: 8px; }
+.p-3 { padding: 12px; }
+.p-4 { padding: 16px; }
+.p-5 { padding: 20px; }
+
+/* 响应式断点 */
+@media (max-width: 768px) {
+  .mobile-responsive {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 16px !important;
+  }
+  
+  .mobile-hide {
+    display: none !important;
+  }
+  
+  .mobile-full-width {
+    width: 100% !important;
+  }
+}
+
+/* PC端适配 */
+@media (min-width: 769px) {
+  .pc-container {
+    max-width: 414px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    min-height: 100vh;
+    position: relative;
+    background-color: #fff;
+  }
+  
+  .pc-only {
+    display: block;
+  }
+  
+  .mobile-only {
+    display: none;
+  }
+}
