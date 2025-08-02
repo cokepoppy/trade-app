@@ -185,6 +185,12 @@ export interface LoginRequest {
   deviceInfo?: DeviceInfo;
 }
 
+export interface PhoneLoginRequest {
+  phone: string;
+  smsCode: string;
+  deviceInfo?: DeviceInfo;
+}
+
 export interface LoginResponse {
   token: string;
   refreshToken: string;

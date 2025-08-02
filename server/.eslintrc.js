@@ -7,6 +7,10 @@ module.exports = {
   extends: [
     'eslint:recommended',
   ],
+  parserOptions: {
+    ecmaVersion: 2020,
+    sourceType: 'module',
+  },
   rules: {
     'no-console': 'warn',
     'no-debugger': 'error',
@@ -23,5 +27,6 @@ module.exports = {
     '*.js',
     'jest.config.js',
     '.eslintrc.js',
+    'src/**/*.ts',
   ],
 };

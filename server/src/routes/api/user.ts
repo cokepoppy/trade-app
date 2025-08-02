@@ -16,6 +16,15 @@ const userController = new UserController();
 // 用户登录
 router.post('/login', userController.login);
 
+// 手机号登录
+router.post('/login/phone', userController.loginByPhone);
+
+// 发送短信验证码
+router.post('/send-sms-code', userController.sendSmsCode);
+
+// 获取图形验证码
+router.get('/captcha', userController.getCaptcha);
+
 // 用户注册
 router.post('/register', userController.register);
 

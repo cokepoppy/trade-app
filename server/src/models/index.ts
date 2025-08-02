@@ -21,7 +21,7 @@ export class UserRepository extends BaseRepository {
           id_card as idCard, address, occupation, education, income,
           risk_level as riskLevel, investment_experience as investmentExperience, investment_goal as investmentGoal, investment_period as investmentPeriod,
           status, is_verified as isVerified, is_certified as isCertified, last_login_time as lastLoginTime, login_count as loginCount,
-          register_time as registerTime, update_time as updateTime
+          register_time as registerTime, update_time as updateTime, password_hash as passwordHash
         FROM ${this.tableName}
         WHERE username = ? AND status != 'deleted'
       `;
@@ -44,7 +44,7 @@ export class UserRepository extends BaseRepository {
           id_card as idCard, address, occupation, education, income,
           risk_level as riskLevel, investment_experience as investmentExperience, investment_goal as investmentGoal, investment_period as investmentPeriod,
           status, is_verified as isVerified, is_certified as isCertified, last_login_time as lastLoginTime, login_count as loginCount,
-          register_time as registerTime, update_time as updateTime
+          register_time as registerTime, update_time as updateTime, password_hash as passwordHash
         FROM ${this.tableName}
         WHERE email = ? AND status != 'deleted'
       `;
@@ -67,7 +67,7 @@ export class UserRepository extends BaseRepository {
           id_card as idCard, address, occupation, education, income,
           risk_level as riskLevel, investment_experience as investmentExperience, investment_goal as investmentGoal, investment_period as investmentPeriod,
           status, is_verified as isVerified, is_certified as isCertified, last_login_time as lastLoginTime, login_count as loginCount,
-          register_time as registerTime, update_time as updateTime
+          register_time as registerTime, update_time as updateTime, password_hash as passwordHash
         FROM ${this.tableName}
         WHERE phone = ? AND status != 'deleted'
       `;

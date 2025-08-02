@@ -20,7 +20,7 @@
     "seed": "node scripts/seed.js",
     "docker:build": "docker build -t trade-app-server .",
     "docker:run": "docker run -p 3000:3000 trade-app-server",
-    "clean": "if exist dist rmdir /s /q dist && if exist logs rmdir /s /q logs",
+    "clean": "rm -rf dist logs",
     "prebuild": "npm run clean",
     "postbuild": "echo 'Build completed successfully!'"
   },
@@ -36,7 +36,9 @@
   "license": "MIT",
   "dependencies": {
     "@types/helmet": "^4.0.0",
+    "axios": "^1.11.0",
     "bcrypt": "^5.1.1",
+    "canvas": "^3.1.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "compression": "^1.7.4",

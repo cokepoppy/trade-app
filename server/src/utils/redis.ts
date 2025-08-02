@@ -8,13 +8,19 @@ class RedisClient {
   private isConnecting = false;
 
   constructor() {
+    // 使用URL格式包含密码
+    const password = config.redis.password || '';
+    const authPart = password ? `:${password}@` : '';
+    const redisUrl = `redis://${authPart}${config.redis.host}:${config.redis.port}`;
+    
+    logger.info('Redis连接URL:', { service: 'trade-app-server' });
+    
     this.client = createClient({
-      url: `redis://${config.redis.host}:${config.redis.port}`,
-      password: config.redis.password || undefined,
+      url: redisUrl,
       database: config.redis.db,
       socket: {
         reconnectStrategy: (retries: number) => {
-          logger.warn(`Redis 重连尝试 ${retries}`);
+          logger.warn(`Redis 重连尝试 ${retries}`, { service: 'trade-app-server' });
           return Math.min(retries * 100, 3000);
         },
       },

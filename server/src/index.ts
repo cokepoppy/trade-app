@@ -191,20 +191,29 @@ class App {
       console.log('🔌 Initializing WebSocket server...');
       await this.wsServer.initialize();
       
-      this.server.listen(this.port, () => {
-        logger.info(`服务器启动成功`, {
-          port: this.port,
-          environment: config.app.env,
-          apiPrefix: config.app.apiPrefix,
-          webSocket: 'enabled'
-        });
+      return new Promise((resolve, reject) => {
+        this.server.listen(this.port, () => {
+          logger.info(`服务器启动成功`, {
+            port: this.port,
+            environment: config.app.env,
+            apiPrefix: config.app.apiPrefix,
+            webSocket: 'enabled'
+          });
 
-        console.log('🚀 Starting server...');
-        // 打印路由信息
-        this.printRoutes();
+          console.log('🚀 Starting server...');
+          // 打印路由信息
+          this.printRoutes();
+          
+          // Print WebSocket stats
+          console.log('📊 WebSocket Server Stats:', this.wsServer.getStats());
+          
+          resolve();
+        });
         
-        // Print WebSocket stats
-        console.log('📊 WebSocket Server Stats:', this.wsServer.getStats());
+        this.server.on('error', (error) => {
+          console.error('❌ Server error:', error);
+          reject(error);
+        });
       });
     } catch (error) {
       console.error('❌ Failed to start server:', error);
@@ -242,7 +251,24 @@ const app = new App();
 // 如果直接运行此文件，启动服务器
 if (require.main === module) {
   console.log('🚀 Starting server...');
-  app.start();
+  
+  // 添加未处理的 Promise 拒绝处理
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('未处理的 Promise 拒绝:', reason);
+    console.error('Promise:', promise);
+    process.exit(1);
+  });
+  
+  // 添加未捕获的异常处理
+  process.on('uncaughtException', (error) => {
+    console.error('未捕获的异常:', error);
+    process.exit(1);
+  });
+  
+  app.start().catch(error => {
+    console.error('服务器启动失败:', error);
+    process.exit(1);
+  });
 }
 
 export default app;

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
-import { User, LoginRequest, RegisterRequest, ChangePasswordRequest, ResetPasswordRequest, LoginApiResponse, RegisterApiResponse, AuthenticatedRequest } from '../../types';
+import { User, LoginRequest, PhoneLoginRequest, RegisterRequest, ChangePasswordRequest, ResetPasswordRequest, LoginApiResponse, RegisterApiResponse, AuthenticatedRequest } from '../../types';
 import { userService } from '../../services/userService';
 import { asyncHandler } from '../../middleware/errorHandler';
 import { createAppError } from '../../types';
@@ -49,6 +49,104 @@ export class UserController {
     res.json({
       code: 0,
       message: '登录成功',
+      data: result,
+      timestamp: Date.now()
+    });
+  });
+
+  /**
+   * 手机号登录
+   */
+  loginByPhone = asyncHandler(async (req: Request, res: Response) => {
+    const { phone, smsCode, deviceInfo } = req.body as PhoneLoginRequest;
+
+    // 验证请求参数
+    const schema = Joi.object({
+      phone: Joi.string().pattern(/^1[3-9]\d{9}$/).required().messages({
+        'string.pattern.base': '手机号格式不正确',
+        'string.empty': '手机号不能为空',
+        'any.required': '手机号是必需的'
+      }),
+      smsCode: Joi.string().length(6).pattern(/^\d{6}$/).required().messages({
+        'string.length': '验证码长度必须为6位',
+        'string.pattern.base': '验证码必须为数字',
+        'string.empty': '验证码不能为空',
+        'any.required': '验证码是必需的'
+      }),
+      deviceInfo: Joi.object().optional()
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) {
+      throw createAppError(400, '请求参数验证失败', error.details);
+    }
+
+    // 调用用户服务手机登录
+    const result = await userService.loginByPhone(phone, smsCode, {
+      deviceInfo,
+      ip: req.ip,
+      userAgent: req.get('User-Agent')
+    }) as LoginApiResponse;
+
+    logger.info('手机号登录成功', { phone, userId: result.data?.userInfo?.id });
+
+    res.json({
+      code: 0,
+      message: '登录成功',
+      data: result,
+      timestamp: Date.now()
+    });
+  });
+
+  /**
+   * 发送短信验证码
+   */
+  sendSmsCode = asyncHandler(async (req: Request, res: Response) => {
+    const { phone, type = 'login' } = req.body;
+
+    // 验证请求参数
+    const schema = Joi.object({
+      phone: Joi.string().pattern(/^1[3-9]\d{9}$/).required().messages({
+        'string.pattern.base': '手机号格式不正确',
+        'string.empty': '手机号不能为空',
+        'any.required': '手机号是必需的'
+      }),
+      type: Joi.string().valid('login', 'register', 'reset').optional().messages({
+        'any.only': '验证码类型不正确'
+      })
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) {
+      throw createAppError(400, '请求参数验证失败', error.details);
+    }
+
+    // 调用用户服务发送短信验证码
+    const result = await userService.sendSmsCode(phone, type as 'login' | 'register' | 'reset', {
+      ip: req.ip,
+      userAgent: req.get('User-Agent')
+    });
+
+    logger.info('短信验证码发送成功', { phone, type });
+
+    res.json({
+      code: 0,
+      message: '验证码发送成功',
+      data: result,
+      timestamp: Date.now()
+    });
+  });
+
+  /**
+   * 获取图形验证码
+   */
+  getCaptcha = asyncHandler(async (req: Request, res: Response) => {
+    // 调用用户服务获取验证码
+    const result = await userService.getCaptcha();
+
+    res.json({
+      code: 0,
+      message: '验证码获取成功',
       data: result,
       timestamp: Date.now()
     });
