@@ -184,6 +184,35 @@
           <text class="link-item" @tap="goToRegister">新用户注册</text>
         </view>
 
+        <!-- 测试账号 -->
+        <view class="test-accounts">
+          <view class="divider">
+            <text class="divider-text">测试账号</text>
+          </view>
+          <view class="test-account-list">
+            <view 
+              class="test-account-item" 
+              @tap="fillTestAccount('trader')"
+            >
+              <view class="test-account-info">
+                <text class="test-account-name">专业交易员</text>
+                <text class="test-account-desc">trader001 / Trader@123456</text>
+              </view>
+              <uni-icons type="forward" size="16" color="#999"></uni-icons>
+            </view>
+            <view 
+              class="test-account-item" 
+              @tap="fillTestAccount('demo')"
+            >
+              <view class="test-account-info">
+                <text class="test-account-name">演示账号</text>
+                <text class="test-account-desc">demo / Demo@123456</text>
+              </view>
+              <uni-icons type="forward" size="16" color="#999"></uni-icons>
+            </view>
+          </view>
+        </view>
+
         <!-- 其他登录方式 -->
         <view class="other-login">
           <view class="divider">
@@ -440,11 +469,13 @@ const validateField = (field: string) => {
 const refreshCaptcha = async () => {
   try {
     const response = await userService.getCaptcha()
-    captchaImage.value = response.data.image
-    captchaKey.value = response.data.key
+    console.log('验证码响应数据:', response.data)
+    captchaImage.value = response.data.data.image
+    captchaKey.value = response.data.data.key
     form.captcha = ''
     validation.captcha = false
   } catch (err) {
+    console.error('获取验证码失败:', err)
     showError('获取验证码失败')
   }
 }
@@ -546,6 +577,46 @@ const goToRegister = () => {
   router.navigateTo('/pages/register/index')
 }
 
+// 测试账号
+const fillTestAccount = (type: 'trader' | 'demo') => {
+  const testAccounts = {
+    trader: {
+      username: 'trader001',
+      password: 'Trader@123456',
+      phone: '13800138000'
+    },
+    demo: {
+      username: 'demo',
+      password: 'Demo@123456',
+      phone: '13900139000'
+    }
+  }
+  
+  const account = testAccounts[type]
+  if (account) {
+    // 切换到用户名登录
+    currentLoginType.value = 'username'
+    
+    // 填充表单
+    form.username = account.username
+    form.password = account.password
+    form.phone = account.phone
+    
+    // 清除验证错误
+    validation.username = false
+    validation.password = false
+    validation.phone = false
+    
+    // 显示提示
+    showError(`已填充${type === 'trader' ? '专业交易员' : '演示'}账号信息`)
+    
+    // 清除错误提示
+    setTimeout(() => {
+      clearError()
+    }, 2000)
+  }
+}
+
 // 第三方登录
 const wechatLogin = () => {
   // 微信登录逻辑
@@ -561,7 +632,7 @@ const alipayLogin = () => {
 <style scoped>
 .login-container {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -571,11 +642,12 @@ const alipayLogin = () => {
 
 .login-card {
   background-color: #ffffff;
-  border-radius: 8px;
-  padding: 24px;
+  border-radius: 12px;
+  padding: 32px 24px;
   width: 100%;
-  max-width: 320px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 340px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .login-header {
@@ -591,9 +663,9 @@ const alipayLogin = () => {
 
 .login-title {
   display: block;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
   margin-bottom: 8px;
 }
 
@@ -601,31 +673,35 @@ const alipayLogin = () => {
   display: block;
   font-size: 14px;
   color: #666;
+  font-weight: 400;
 }
 
 .login-type-switch {
   display: flex;
-  background-color: #f8f9fa;
-  border-radius: 6px;
+  background-color: #f0f2f5;
+  border-radius: 8px;
   padding: 4px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  border: 1px solid #e8e8e8;
 }
 
 .login-type-item {
   flex: 1;
   text-align: center;
   padding: 12px;
-  border-radius: 4px;
+  border-radius: 6px;
   color: #666;
   font-size: 14px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   cursor: pointer;
+  font-weight: 500;
 }
 
 .login-type-item.active {
-  background-color: #1890ff;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
   color: #ffffff;
-  font-weight: 500;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
 }
 
 .login-form {
@@ -649,20 +725,21 @@ const alipayLogin = () => {
 .input-group {
   display: flex;
   align-items: center;
-  padding: 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
+  padding: 14px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
   background-color: #ffffff;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .input-group:focus-within {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  border-color: #ff6b6b;
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
 }
 
 .input-group.error {
   border-color: #ff4d4f;
+  background-color: #fff2f0;
 }
 
 .form-input {
@@ -701,24 +778,29 @@ const alipayLogin = () => {
 }
 
 .sms-code-btn {
-  padding: 8px 16px;
+  padding: 10px 16px;
   border: none;
   border-radius: 6px;
-  background: #1890ff;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
   color: #fff;
   font-size: 12px;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .sms-code-btn:hover {
-  background: #40a9ff;
+  background: linear-gradient(135deg, #ff5252 0%, #e74c3c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
 }
 
 .sms-code-btn.disabled {
-  background: #d9d9d9;
+  background: linear-gradient(135deg, #d9d9d9 0%, #b8b8b8 100%);
   color: #999;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .form-error {
@@ -750,27 +832,33 @@ const alipayLogin = () => {
   width: 100%;
   padding: 16px;
   border: none;
-  border-radius: 6px;
-  background: #1890ff;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
   color: #fff;
   font-size: 16px;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-weight: 600;
+  transition: all 0.3s ease;
   cursor: pointer;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
 }
 
 .login-btn:hover {
-  background: #40a9ff;
+  background: linear-gradient(135deg, #ff5252 0%, #e74c3c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
 }
 
 .login-btn:active {
-  opacity: 0.8;
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(255, 107, 107, 0.3);
 }
 
 .login-btn.disabled {
-  background: #d9d9d9;
+  background: linear-gradient(135deg, #d9d9d9 0%, #b8b8b8 100%);
   color: #999;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .loading-spinner {
@@ -854,6 +942,53 @@ const alipayLogin = () => {
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.test-accounts {
+  margin-top: 16px;
+}
+
+.test-account-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.test-account-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.test-account-item:hover {
+  background: #fff5f5;
+  border-color: #ff6b6b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.1);
+}
+
+.test-account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.test-account-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.test-account-desc {
+  font-size: 12px;
+  color: #666;
+  font-family: monospace;
 }
 
 .social-item:hover {
