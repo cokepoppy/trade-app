@@ -21,7 +21,11 @@
       "Bash(npx tsc:*)",
       "Bash(rm:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm cache clean:*)",
+      "Bash(sudo chown:*)",
+      "Bash(sudo rm:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }
