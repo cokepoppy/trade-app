@@ -20,6 +20,14 @@
             </text>
           </view>
         </view>
+        <view class="watchlist-btn" @click="toggleWatchlist">
+          <uni-icons 
+            :type="isInWatchlist ? 'star-filled' : 'star'" 
+            size="24" 
+            :color="isInWatchlist ? '#ff9500' : '#999'"
+          ></uni-icons>
+          <text class="watchlist-text">{{ isInWatchlist ? '已添加' : '添加自选' }}</text>
+        </view>
       </view>
       <view class="stock-extra">
         <view class="extra-item">
@@ -198,6 +206,8 @@ const stockCode = ref('')
 const stockDetail = ref<any>(null)
 const newsList = ref<any[]>([])
 const loading = ref(false)
+const watchlist = ref<any[]>([])
+const isInWatchlist = ref(false)
 
 const tabs = [
   { key: 'time', name: '分时' },
@@ -292,6 +302,66 @@ const goToNewsDetail = (newsId: string) => {
   })
 }
 
+// 自选股相关功能
+const loadWatchlist = () => {
+  try {
+    const savedWatchlist = uni.getStorageSync('watchlist') || []
+    watchlist.value = savedWatchlist
+  } catch (error) {
+    console.error('Load watchlist error:', error)
+  }
+}
+
+const checkIfInWatchlist = () => {
+  if (stockCode.value) {
+    isInWatchlist.value = watchlist.value.some(item => item.code === stockCode.value)
+  }
+}
+
+const toggleWatchlist = () => {
+  try {
+    if (!stockDetail.value) return
+    
+    if (isInWatchlist.value) {
+      // 从自选股中移除
+      const updatedWatchlist = watchlist.value.filter(item => item.code !== stockCode.value)
+      watchlist.value = updatedWatchlist
+      uni.setStorageSync('watchlist', updatedWatchlist)
+      isInWatchlist.value = false
+      uni.showToast({
+        title: '已从自选股中移除',
+        icon: 'success'
+      })
+    } else {
+      // 添加到自选股
+      const watchlistItem = {
+        id: Date.now().toString(),
+        code: stockCode.value,
+        name: stockDetail.value.name,
+        price: stockDetail.value.price,
+        change: stockDetail.value.change,
+        changePercent: stockDetail.value.changePercent,
+        addedTime: Date.now()
+      }
+      
+      const updatedWatchlist = [...watchlist.value, watchlistItem]
+      watchlist.value = updatedWatchlist
+      uni.setStorageSync('watchlist', updatedWatchlist)
+      isInWatchlist.value = true
+      uni.showToast({
+        title: '已添加到自选股',
+        icon: 'success'
+      })
+    }
+  } catch (error) {
+    console.error('Toggle watchlist error:', error)
+    uni.showToast({
+      title: '操作失败',
+      icon: 'none'
+    })
+  }
+}
+
 const loadStockDetail = async () => {
   if (!stockCode.value) return
   
@@ -300,6 +370,8 @@ const loadStockDetail = async () => {
   try {
     const detail = await marketStore.getStockDetail(stockCode.value)
     stockDetail.value = detail
+    // 检查是否在自选股中
+    checkIfInWatchlist()
   } catch (error) {
     console.error('加载股票详情失败:', error)
   } finally {
@@ -329,6 +401,7 @@ onMounted(() => {
     
     if (options.code) {
       stockCode.value = options.code
+      loadWatchlist()
       loadStockDetail()
       loadNewsList()
     }
@@ -350,6 +423,41 @@ onMounted(() => {
 
 .stock-info {
   margin-bottom: 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.watchlist-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 16rpx;
+  border-radius: 8rpx;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.watchlist-btn:active {
+  background-color: #e9ecef;
+  transform: scale(0.95);
+}
+
+.watchlist-btn.added {
+  background-color: #fff4e6;
+  border-color: #ff9500;
+}
+
+.watchlist-text {
+  font-size: 22rpx;
+  color: #666;
+  text-align: center;
+}
+
+.watchlist-btn.added .watchlist-text {
+  color: #ff9500;
 }
 
 .stock-name-info {

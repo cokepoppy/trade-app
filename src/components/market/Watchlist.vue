@@ -3,10 +3,10 @@
     <view class="watchlist-header">
       <text class="section-title">自选股</text>
       <view class="header-actions">
-        <view class="action-btn" @tap="handleAddStock">
+        <view class="action-btn" @click="handleAddStock">
           <uni-icons type="plus" size="16" color="#666"></uni-icons>
         </view>
-        <view class="action-btn" @tap="handleManage">
+        <view class="action-btn" @click="handleManage">
           <uni-icons type="gear" size="16" color="#666"></uni-icons>
         </view>
       </view>
@@ -17,7 +17,7 @@
         v-for="stock in watchlistItems" 
         :key="stock.id" 
         class="stock-item"
-        @tap="handleStockClick(stock)"
+        @click="handleStockClick(stock)"
       >
         <view class="stock-info">
           <text class="stock-name">{{ stock.name }}</text>
@@ -37,14 +37,14 @@
         </view>
         
         <view class="stock-actions">
-          <view class="action-icon" @tap.stop="handleRemoveStock(stock)">
+          <view class="action-icon" @click.stop="handleRemoveStock(stock)">
             <uni-icons type="close" size="14" color="#999"></uni-icons>
           </view>
         </view>
       </view>
     </view>
     
-    <view v-else class="empty-state">
+    <view v-else class="empty-state" @click="handleAddStock">
       <view class="empty-content">
         <uni-icons type="star" size="32" color="#d9d9d9"></uni-icons>
         <text class="empty-text">暂无自选股</text>
@@ -52,7 +52,7 @@
       </view>
     </view>
     
-    <view v-if="watchlistItems.length > 0" class="watchlist-footer" @tap="handleViewAll">
+    <view v-if="watchlistItems.length > 0" class="watchlist-footer" @click="handleViewAll">
       <text class="view-all-text">查看全部自选股</text>
       <uni-icons type="arrowright" size="14" color="#666"></uni-icons>
     </view>
@@ -63,6 +63,7 @@
 import { ref, onMounted } from 'vue'
 import { marketService } from '@/services/marketService'
 import { formatNumber, formatChange, formatChangePercent, getColorClass, formatStockCode } from '@/utils/format'
+
 const watchlistItems = ref<any[]>([])
 
 const loadWatchlist = async () => {
@@ -88,9 +89,33 @@ const loadWatchlist = async () => {
 }
 
 const handleAddStock = () => {
-  uni.navigateTo({
-    url: '/pages/market/search?mode=add'
-  })
+  console.log('[Watchlist] 添加股票按钮被点击')
+  
+  // 先尝试直接添加测试股票
+  const testStock = {
+    id: Date.now().toString(),
+    code: '000001',
+    name: '平安银行',
+    price: 12.58,
+    change: 0.23,
+    changePercent: 1.86,
+    addedTime: Date.now()
+  }
+  
+  addToWatchlist(testStock)
+  
+  // 同时也跳转到搜索页面
+  setTimeout(() => {
+    uni.navigateTo({
+      url: '/pages/market/search?mode=add',
+      success: () => {
+        console.log('[Watchlist] 成功跳转到搜索页面')
+      },
+      fail: (error) => {
+        console.error('[Watchlist] 跳转失败:', error)
+      }
+    })
+  }, 500)
 }
 
 const handleManage = () => {
@@ -100,6 +125,7 @@ const handleManage = () => {
 }
 
 const handleStockClick = (stock: any) => {
+  console.log('[Watchlist] 股票被点击:', stock)
   uni.navigateTo({
     url: `/pages/market/detail?code=${stock.code}&name=${stock.name}`
   })
@@ -115,6 +141,45 @@ const handleRemoveStock = async (stock: any) => {
   }
 }
 
+// 检查股票是否在自选股中
+const isInWatchlist = (stockCode: string) => {
+  return watchlistItems.value.some(item => item.code === stockCode)
+}
+
+// 添加股票到自选股
+const addToWatchlist = async (stock: any) => {
+  try {
+    if (isInWatchlist(stock.code)) {
+      uni.showToast({
+        title: '该股票已在自选股中',
+        icon: 'none'
+      })
+      return
+    }
+    
+    const watchlistItem = {
+      id: Date.now().toString(),
+      code: stock.code,
+      name: stock.name,
+      price: stock.price,
+      change: stock.change,
+      changePercent: stock.changePercent,
+      addedTime: Date.now()
+    }
+    
+    const updatedWatchlist = [...watchlistItems.value, watchlistItem]
+    watchlistItems.value = updatedWatchlist
+    uni.setStorageSync('watchlist', updatedWatchlist)
+    
+    uni.showToast({
+      title: '已添加到自选股',
+      icon: 'success'
+    })
+  } catch (error) {
+    console.error('Add to watchlist error:', error)
+  }
+}
+
 const handleViewAll = () => {
   uni.navigateTo({
     url: '/pages/market/watchlist'
@@ -122,7 +187,9 @@ const handleViewAll = () => {
 }
 
 onMounted(() => {
+  console.log('[Watchlist] 组件开始挂载')
   loadWatchlist()
+  console.log('[Watchlist] 组件挂载完成，自选股数据:', watchlistItems.value)
 })
 </script>
 
@@ -177,10 +244,15 @@ onMounted(() => {
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  min-height: 60px;
 }
 
 .stock-item:active {
   background-color: #f5f5f5;
+}
+
+.stock-item:hover {
+  background-color: #f8f9fa;
 }
 
 .stock-info {
@@ -245,6 +317,12 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.empty-state:active {
+  background-color: #f5f5f5;
 }
 
 .empty-content {
@@ -298,3 +376,4 @@ onMounted(() => {
   color: #666;
 }
 </style>
+EOF < /dev/null

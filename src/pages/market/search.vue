@@ -64,9 +64,8 @@
             v-for="stock in searchResults" 
             :key="stock.code"
             class="result-item"
-            @click="selectStock(stock)"
           >
-            <view class="stock-info">
+            <view class="stock-info" @click="selectStock(stock)">
               <text class="stock-name">{{ stock.name }}</text>
               <text class="stock-code">{{ stock.code }}</text>
             </view>
@@ -78,6 +77,19 @@
                 {{ stock.change >= 0 ? '+' : '' }}{{ stock.change?.toFixed(2) || '--' }}
                 ({{ stock.changePercent >= 0 ? '+' : '' }}{{ stock.changePercent?.toFixed(2) || '--' }}%)
               </text>
+            </view>
+            <view class="stock-actions">
+              <view 
+                class="add-btn" 
+                :class="{ 'added': isInWatchlist(stock.code) }"
+                @click.stop="toggleWatchlist(stock)"
+              >
+                <uni-icons 
+                  :type="isInWatchlist(stock.code) ? 'star-filled' : 'star'" 
+                  size="18" 
+                  :color="isInWatchlist(stock.code) ? '#ff9500' : '#999'"
+                ></uni-icons>
+              </view>
             </view>
           </view>
         </view>
@@ -98,15 +110,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useMarketStore } from '@/stores/useMarketStore'
+import { useAppStore } from '@/stores/useAppStore'
 
 const marketStore = useMarketStore()
+const appStore = useAppStore()
 
 const searchKeyword = ref('')
 const searchResults = ref<any[]>([])
 const searchHistory = ref<string[]>([])
 const loading = ref(false)
+const watchlist = ref<any[]>([])
 
 const hotSearches = [
   '贵州茅台',
@@ -146,8 +161,34 @@ const performSearch = async () => {
   loading.value = true
   
   try {
-    const results = await marketStore.searchStocks(keyword)
-    searchResults.value = results
+    // 模拟搜索结果，用于测试自选股功能
+    const mockResults = [
+      {
+        code: '000001',
+        name: '平安银行',
+        price: 12.58,
+        change: 0.23,
+        changePercent: 1.86
+      },
+      {
+        code: '000002', 
+        name: '万科A',
+        price: 18.42,
+        change: -0.15,
+        changePercent: -0.81
+      },
+      {
+        code: '600036',
+        name: '招商银行',
+        price: 35.67,
+        change: 0.52,
+        changePercent: 1.48
+      }
+    ].filter(stock => 
+      stock.name.includes(keyword) || stock.code.includes(keyword)
+    )
+    
+    searchResults.value = mockResults
     
     // 添加到搜索历史
     addToHistory(keyword)
@@ -204,12 +245,71 @@ const goBack = () => {
   uni.navigateBack()
 }
 
+// 自选股相关功能
+const loadWatchlist = () => {
+  try {
+    const savedWatchlist = uni.getStorageSync('watchlist') || []
+    watchlist.value = savedWatchlist
+  } catch (error) {
+    console.error('Load watchlist error:', error)
+  }
+}
+
+const isInWatchlist = (stockCode: string) => {
+  return watchlist.value.some(item => item.code === stockCode)
+}
+
+const toggleWatchlist = async (stock: any) => {
+  try {
+    const inWatchlist = isInWatchlist(stock.code)
+    
+    if (inWatchlist) {
+      // 从自选股中移除
+      const updatedWatchlist = watchlist.value.filter(item => item.code !== stock.code)
+      watchlist.value = updatedWatchlist
+      uni.setStorageSync('watchlist', updatedWatchlist)
+      uni.showToast({
+        title: '已从自选股中移除',
+        icon: 'success'
+      })
+    } else {
+      // 添加到自选股
+      const watchlistItem = {
+        id: Date.now().toString(),
+        code: stock.code,
+        name: stock.name,
+        price: stock.price,
+        change: stock.change,
+        changePercent: stock.changePercent,
+        addedTime: Date.now()
+      }
+      
+      const updatedWatchlist = [...watchlist.value, watchlistItem]
+      watchlist.value = updatedWatchlist
+      uni.setStorageSync('watchlist', updatedWatchlist)
+      uni.showToast({
+        title: '已添加到自选股',
+        icon: 'success'
+      })
+    }
+  } catch (error) {
+    console.error('Toggle watchlist error:', error)
+    uni.showToast({
+      title: '操作失败',
+      icon: 'none'
+    })
+  }
+}
+
 onMounted(() => {
   // 加载搜索历史
   const history = uni.getStorageSync('search_history')
   if (history) {
     searchHistory.value = history
   }
+  
+  // 加载自选股
+  loadWatchlist()
 })
 </script>
 
@@ -350,6 +450,32 @@ onMounted(() => {
 
 .result-item:last-child {
   border-bottom: none;
+}
+
+.stock-actions {
+  display: flex;
+  align-items: center;
+  margin-left: 20rpx;
+}
+
+.add-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  transition: all 0.3s ease;
+}
+
+.add-btn:active {
+  background-color: #e8e8e8;
+  transform: scale(0.95);
+}
+
+.add-btn.added {
+  background-color: #fff4e6;
 }
 
 .stock-info {

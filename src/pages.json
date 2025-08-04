@@ -1,6 +1,5 @@
 {
   "pages": [
-    //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
     {
       "path": "pages/login/index",
       "style": {
@@ -99,6 +98,14 @@
       }
     },
     {
+      "path": "pages/market/watchlist",
+      "style": {
+        "navigationBarTitleText": "自选股管理",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/test-mobile/index",
       "style": {
         "navigationBarTitleText": "移动端测试",
@@ -162,3 +169,4 @@
     }
   }
 }
+EOF < /dev/null
