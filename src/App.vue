@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { onLaunch, onShow, onHide } from "@dcloudio/uni-app";
+import { useUserStore } from "@/stores/useUserStore";
+
+const userStore = useUserStore();
+
 onLaunch(() => {
   console.log("App Launch");
+  // 初始化用户认证状态
+  userStore.initialize();
 });
 onShow(() => {
   console.log("App Show");

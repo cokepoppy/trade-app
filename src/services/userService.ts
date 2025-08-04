@@ -11,7 +11,7 @@ import type {
   ApiResponse,
   PaginationResult
 } from '@/types'
-import { storage } from '@/utils/storage'
+import { storage, storageKeys } from '@/utils/storage'
 import { useAppStore } from '@/stores/useAppStore'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
@@ -28,10 +28,18 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const token = storage.get('user_token')
+    const token = storage.get(storageKeys.USER_TOKEN)
+    console.log('[DEBUG] Token from storage:', token ? 'Token exists' : 'No token found')
+    console.log('[DEBUG] Storage keys available:', Object.keys(storage.getAll()))
+    console.log('[DEBUG] Raw token value from storage:', storage.get(storageKeys.USER_TOKEN))
+    console.log('[DEBUG] Token type:', typeof storage.get(storageKeys.USER_TOKEN))
+    console.log('[DEBUG] Direct storage access:', uni.getStorageSync(storageKeys.USER_TOKEN))
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+      console.log('[DEBUG] Authorization header set:', config.headers.Authorization)
+    } else {
+      console.log('[DEBUG] No token available for request to:', config.url)
     }
     
     return config

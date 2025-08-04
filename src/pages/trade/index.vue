@@ -109,6 +109,7 @@
     </view>
     
     <Footer />
+    </view>
   </view>
 </template>
 
@@ -490,5 +491,3 @@ onMounted(async () => {
   color: #666;
 }
 </style>
-  </view>
-</view>

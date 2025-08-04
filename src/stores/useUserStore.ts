@@ -102,7 +102,8 @@ export const useUserStore = defineStore('user', () => {
       error.value = null
       
       const response = await userService.login({ username, password, captcha })
-      const { token: newToken, refreshToken: newRefreshToken, userInfo } = response.data
+      const loginData = response.data.data
+      const { token: newToken, refreshToken: newRefreshToken, userInfo } = loginData
       
       token.value = newToken
       refreshToken.value = newRefreshToken
@@ -110,9 +111,13 @@ export const useUserStore = defineStore('user', () => {
       isAuthenticated.value = true
       lastLoginTime.value = Date.now()
       
+      console.log('[DEBUG] Storing token:', newToken ? 'Token exists' : 'No token')
+      console.log('[DEBUG] Storage before:', Object.keys(storage.getAll()))
       storage.set(storageKeys.USER_TOKEN, newToken)
       storage.set(storageKeys.USER_INFO, userInfo)
       storage.set(storageKeys.LAST_LOGIN, Date.now())
+      console.log('[DEBUG] Storage after:', Object.keys(storage.getAll()))
+      console.log('[DEBUG] Token verification:', storage.get(storageKeys.USER_TOKEN) ? 'Token stored successfully' : 'Token storage failed')
       
       await Promise.all([
         fetchUserProfile(),

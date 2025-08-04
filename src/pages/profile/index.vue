@@ -154,6 +154,7 @@
       <u-button type="error" @click="logout">退出登录</u-button>
     </view>
   </view>
+  </view>
 </template>
 
 <script setup lang="ts">
@@ -579,5 +580,3 @@ const logout = async () => {
   padding: 32rpx;
 }
 </style>
-  </view>
-</view>
