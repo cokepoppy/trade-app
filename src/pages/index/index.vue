@@ -11,7 +11,7 @@
         <view class="market-hotspots">
           <view class="section-header">
             <text class="section-title">市场热点</text>
-            <text class="view-all" @tap="navigateToMarket">查看全部</text>
+            <text class="view-all" @click="navigateToMarket">查看全部</text>
           </view>
           
           <view class="hotspots-list">
@@ -19,7 +19,7 @@
               v-for="hotspot in marketHotspots" 
               :key="hotspot.id" 
               class="hotspot-item"
-              @tap="handleHotspotClick(hotspot)"
+              @click="handleHotspotClick(hotspot)"
             >
               <view class="hotspot-info">
                 <text class="hotspot-title">{{ hotspot.title }}</text>
