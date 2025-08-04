@@ -1,5 +1,6 @@
 <template>
-  <view class="trade-container">
+  <view class="app-container">
+    <view class="trade-container">
     <Header />
     
     <view class="trade-content">
@@ -489,3 +490,5 @@ onMounted(async () => {
   color: #666;
 }
 </style>
+  </view>
+</view>

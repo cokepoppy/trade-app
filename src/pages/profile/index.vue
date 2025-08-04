@@ -1,5 +1,6 @@
 <template>
-  <view class="profile-page">
+  <view class="app-container">
+    <view class="profile-page">
     <!-- 用户信息区域 -->
     <view class="user-section">
       <view class="user-info">
@@ -578,3 +579,5 @@ const logout = async () => {
   padding: 32rpx;
 }
 </style>
+  </view>
+</view>

@@ -1,5 +1,5 @@
 <template>
-  <view class="app-container">
+  <view class="app-container page-content">
     <view class="login-container">
     <!-- 登录卡片 -->
     <view class="login-card">
@@ -185,35 +185,6 @@
           <text class="link-item" @tap="goToRegister">新用户注册</text>
         </view>
 
-        <!-- 测试账号 -->
-        <view class="test-accounts">
-          <view class="divider">
-            <text class="divider-text">测试账号</text>
-          </view>
-          <view class="test-account-list">
-            <view 
-              class="test-account-item" 
-              @tap="fillTestAccount('trader')"
-            >
-              <view class="test-account-info">
-                <text class="test-account-name">专业交易员</text>
-                <text class="test-account-desc">trader001 / Trader@123456</text>
-              </view>
-              <uni-icons type="forward" size="16" color="#999"></uni-icons>
-            </view>
-            <view 
-              class="test-account-item" 
-              @tap="fillTestAccount('demo')"
-            >
-              <view class="test-account-info">
-                <text class="test-account-name">演示账号</text>
-                <text class="test-account-desc">demo / Demo@123456</text>
-              </view>
-              <uni-icons type="forward" size="16" color="#999"></uni-icons>
-            </view>
-          </view>
-        </view>
-
         <!-- 其他登录方式 -->
         <view class="other-login">
           <view class="divider">
@@ -363,6 +334,18 @@ onMounted(async () => {
 
   // 加载保存的登录信息
   loadSavedCredentials()
+
+  // 如果没有保存的登录信息，默认填充demo账号
+  if (!form.username && !form.password) {
+    form.username = 'demo'
+    form.password = 'Demo@123456'
+    form.phone = '13900139000'
+    
+    // 清除验证错误
+    validation.username = false
+    validation.password = false
+    validation.phone = false
+  }
 
   // 获取验证码
   await refreshCaptcha()
@@ -579,45 +562,6 @@ const goToRegister = () => {
   router.navigateTo('/pages/register/index')
 }
 
-// 测试账号
-const fillTestAccount = (type: 'trader' | 'demo') => {
-  const testAccounts = {
-    trader: {
-      username: 'trader001',
-      password: 'Trader@123456',
-      phone: '13800138000'
-    },
-    demo: {
-      username: 'demo',
-      password: 'Demo@123456',
-      phone: '13900139000'
-    }
-  }
-  
-  const account = testAccounts[type]
-  if (account) {
-    // 切换到用户名登录
-    currentLoginType.value = 'username'
-    
-    // 填充表单
-    form.username = account.username
-    form.password = account.password
-    form.phone = account.phone
-    
-    // 清除验证错误
-    validation.username = false
-    validation.password = false
-    validation.phone = false
-    
-    // 显示提示
-    showError(`已填充${type === 'trader' ? '专业交易员' : '演示'}账号信息`)
-    
-    // 清除错误提示
-    setTimeout(() => {
-      clearError()
-    }, 2000)
-  }
-}
 
 // 第三方登录
 const wechatLogin = () => {
@@ -634,39 +578,72 @@ const alipayLogin = () => {
 <style scoped>
 .login-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #ffffff;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 16px;
+  padding: 0;
 }
 
-/* 移动端容器样式 */
-@media (max-width: 768px) {
-  .app-container {
-    width: 100%;
-  }
-}
-
-@media (min-width: 769px) {
+/* H5默认按PC宽度显示 */
+@media (hover: hover) and (pointer: fine) {
+  /* PC设备样式 */
   .app-container {
     max-width: 414px;
     margin: 0 auto;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     min-height: 100vh;
     position: relative;
+    background: #ffffff;
+  }
+  
+  .login-container {
+    background: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+  }
+  
+  .login-card {
+    height: 100vh;
+    border-radius: 0;
+  }
+}
+
+/* 移动端容器样式 - 只在触摸设备或小屏幕生效 */
+@media (hover: none) and (pointer: coarse), (max-width: 768px) {
+  .app-container {
+    width: 100%;
+    background: #ffffff;
+  }
+  
+  .login-container {
+    background: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
   }
 }
 
 .login-card {
   background-color: #ffffff;
-  border-radius: 12px;
+  border-radius: 0;
   padding: 32px 24px;
   width: 100%;
-  max-width: 340px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  height: 100vh;
+  max-width: none;
+  box-shadow: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .login-header {

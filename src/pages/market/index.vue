@@ -1,5 +1,6 @@
 <template>
-  <view class="market-container">
+  <view class="app-container">
+    <view class="market-container">
     <view class="market-header">
       <text class="market-title">行情</text>
       <view class="search-icon" @click="goToSearch">
@@ -309,3 +310,5 @@ onMounted(async () => {
   color: #52c41a;
 }
 </style>
+  </view>
+</view>

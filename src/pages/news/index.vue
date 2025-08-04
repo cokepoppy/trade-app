@@ -1,5 +1,6 @@
 <template>
-  <view class="news-page">
+  <view class="app-container">
+    <view class="news-page">
     <!-- 顶部搜索栏 -->
     <view class="search-bar">
       <view class="search-input" @click="goToSearch">
@@ -595,3 +596,5 @@ onUnmounted(() => {
   }
 }
 </style>
+  </view>
+</view>
