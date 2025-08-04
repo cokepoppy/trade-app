@@ -345,6 +345,7 @@ npm run test
 
 ## 联系方式
 
-- 项目维护者: [Your Name]
-- 邮箱: [your.email@example.com]
+- 项目维护者: [sgch]
+- 邮箱: [sgch2023@gmail.com]
+
 - 项目链接: [https://github.com/yourusername/trade-app] 
