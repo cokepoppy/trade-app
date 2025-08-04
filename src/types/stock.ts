@@ -310,3 +310,6 @@ export interface StockScreenerResult {
   pageSize: number
   conditions: StockScreenerCondition
 }
+
+// Re-export websocket types for compatibility
+export type { KLineData, TimeShareData, RealTimeStockData, MarketDepth } from './websocket'

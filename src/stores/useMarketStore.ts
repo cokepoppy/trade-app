@@ -101,7 +101,7 @@ export const useMarketStore = defineStore('market', () => {
       
       marketDataManager.value = createMarketDataManager({
         enabled: realTimeEnabled.value,
-        url: import.meta.env.VITE_WS_URL || 'ws://localhost:3001',
+        url: import.meta.env.VITE_WS_URL || 'ws://localhost:3000',
         reconnectInterval: 3000,
         maxReconnectAttempts: 10,
         heartbeatInterval: 30000,

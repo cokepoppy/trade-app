@@ -307,7 +307,7 @@ export class MarketDataManager {
 // Default configuration
 export const defaultMarketDataConfig: MarketDataConfig = {
   enabled: true,
-  url: import.meta.env.VITE_WS_URL || 'ws://localhost:3001/ws',
+  url: import.meta.env.VITE_WS_URL || 'ws://localhost:3000',
   reconnectInterval: 3000,
   maxReconnectAttempts: 10,
   heartbeatInterval: 30000,

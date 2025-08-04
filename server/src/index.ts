@@ -24,6 +24,8 @@ import { requestLogger } from './middleware/requestLogger';
 console.log('requestLogger 导入成功');
 import { MarketDataWebSocketServer } from './websocket/marketDataServer';
 console.log('MarketDataWebSocketServer 导入成功');
+import { RealTimeMarketDataServer } from './websocket/realTimeMarketDataServer';
+console.log('RealTimeMarketDataServer 导入成功');
 console.log('🔧 Starting server initialization...');
 
 class App {
@@ -31,6 +33,7 @@ class App {
   public port: number;
   public server: any;
   public wsServer: MarketDataWebSocketServer;
+  public realTimeServer: RealTimeMarketDataServer;
 
   constructor() {
     console.log('🏗️  Creating Express app...');
@@ -38,7 +41,8 @@ class App {
     this.port = config.app.port;
     console.log(`📡 Configured port: ${this.port}`);
     this.server = createServer(this.app);
-    this.wsServer = new MarketDataWebSocketServer(this.server);
+    // this.wsServer = new MarketDataWebSocketServer(this.server); // Temporarily disabled to avoid conflicts
+    this.realTimeServer = new RealTimeMarketDataServer(this.server);
     this.setupMiddleware();
     this.setupRoutes();
     this.setupErrorHandling();
@@ -187,9 +191,10 @@ class App {
    */
   public async start(): Promise<void> {
     try {
-      // Initialize WebSocket server
-      console.log('🔌 Initializing WebSocket server...');
-      await this.wsServer.initialize();
+      // Initialize WebSocket servers
+      console.log('🔌 Initializing WebSocket servers...');
+      // await this.wsServer.initialize(); // Temporarily disabled to avoid conflicts
+      this.realTimeServer.start();
       
       return new Promise((resolve, reject) => {
         this.server.listen(this.port, '0.0.0.0', () => {
@@ -205,7 +210,8 @@ class App {
           this.printRoutes();
           
           // Print WebSocket stats
-          console.log('📊 WebSocket Server Stats:', this.wsServer.getStats());
+          // console.log('📊 Market Data WebSocket Server Stats:', this.wsServer.getStats()); // Temporarily disabled
+          console.log('📈 Real-Time Market Data Server Stats:', this.realTimeServer.getStats());
           
           // Keep the server running
           this.server.on('close', () => {

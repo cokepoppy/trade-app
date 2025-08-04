@@ -1,7 +1,7 @@
-const { database } = require('../src/utils/database');
+const { database } = require('./utils/database');
 const fs = require('fs');
 const path = require('path');
-const logger = require('../src/utils/logger');
+const logger = require('./utils/logger');
 
 /**
  * 数据库迁移脚本
@@ -88,11 +88,19 @@ class Migration {
       // 开始事务
       await database.beginTransaction();
 
-      // 执行SQL
-      await database.query(sql);
+      // 分割SQL语句
+      const statements = sql.split(';').filter(stmt => stmt.trim());
+      
+      // 执行每个SQL语句
+      for (const statement of statements) {
+        if (statement.trim()) {
+          await database.query(statement + ';');
+        }
+      }
 
       // 记录迁移
-      const migrationId = require('uuid').v4();
+      const { v4: uuidv4 } = require('uuid');
+      const migrationId = uuidv4();
       await database.query(
         'INSERT INTO schema_migrations (id, migration) VALUES (?, ?)',
         [migrationId, migrationName]

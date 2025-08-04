@@ -1,5 +1,6 @@
 import type { User, UserSettings, NotificationSettings, PrivacySettings, SecuritySettings, TradingSettings, DisplaySettings } from './user'
 import type { TradeOrder } from './trade'
+import type { WebSocketMessage, WebSocketConfig } from './websocket'
 
 export interface ApiResponse<T = any> {
   code: number
@@ -56,22 +57,6 @@ export interface PaginationResult<T> {
   hasPrev: boolean
 }
 
-export interface WebSocketMessage {
-  type: string
-  data: any
-  timestamp: number
-  messageId: string
-}
-
-export interface WebSocketConfig {
-  url: string
-  reconnect: boolean
-  reconnectInterval: number
-  maxReconnectAttempts: number
-  heartbeat: boolean
-  heartbeatInterval: number
-  timeout: number
-}
 
 export interface StockApiParams {
   code?: string
