@@ -4,10 +4,10 @@
     <!-- 用户信息区域 -->
     <view class="user-section">
       <view class="user-info">
-        <image :src="userInfo.avatar || '/static/default-avatar.png'" class="user-avatar" @click="changeAvatar"></image>
+        <image :src="userInfo?.avatar || '/static/default-avatar.png'" class="user-avatar" @click="changeAvatar"></image>
         <view class="user-details">
-          <text class="user-name">{{ userInfo.nickname || userInfo.username }}</text>
-          <text class="user-id">ID: {{ userInfo.userId }}</text>
+          <text class="user-name">{{ userInfo?.nickname || userInfo?.username || '未登录' }}</text>
+          <text class="user-id">ID: {{ userInfo?.userId || 'N/A' }}</text>
           <view class="user-level">
             <u-tag :text="userLevel.text" :type="userLevel.type" size="mini"></u-tag>
           </view>
@@ -21,19 +21,19 @@
       <!-- 用户统计 -->
       <view class="user-stats">
         <view class="stat-item" @click="goToFollowList">
-          <text class="stat-value">{{ userInfo.followCount || 0 }}</text>
+          <text class="stat-value">{{ userInfo?.followCount || 0 }}</text>
           <text class="stat-label">关注</text>
         </view>
         <view class="stat-item" @click="goToFansList">
-          <text class="stat-value">{{ userInfo.fansCount || 0 }}</text>
+          <text class="stat-value">{{ userInfo?.fansCount || 0 }}</text>
           <text class="stat-label">粉丝</text>
         </view>
         <view class="stat-item" @click="goToMyPosts">
-          <text class="stat-value">{{ userInfo.postCount || 0 }}</text>
+          <text class="stat-value">{{ userInfo?.postCount || 0 }}</text>
           <text class="stat-label">发帖</text>
         </view>
         <view class="stat-item" @click="goToMyNews">
-          <text class="stat-value">{{ userInfo.newsCount || 0 }}</text>
+          <text class="stat-value">{{ userInfo?.newsCount || 0 }}</text>
           <text class="stat-label">资讯</text>
         </view>
       </view>
@@ -194,18 +194,20 @@ onMounted(async () => {
 const loadUserInfo = async () => {
   try {
     const response = await userService.getUserProfile()
-    userInfo.value = response.data
+    userInfo.value = response.data || {}
     
     // 设置用户等级
-    if (userInfo.value.level === 'vip') {
+    if (userInfo.value && userInfo.value.level === 'vip') {
       userLevel.value = { text: 'VIP会员', type: 'warning' }
-    } else if (userInfo.value.level === 'premium') {
+    } else if (userInfo.value && userInfo.value.level === 'premium') {
       userLevel.value = { text: '高级会员', type: 'success' }
-    } else if (userInfo.value.level === 'admin') {
+    } else if (userInfo.value && userInfo.value.level === 'admin') {
       userLevel.value = { text: '管理员', type: 'error' }
     }
   } catch (error) {
     console.error('加载用户信息失败:', error)
+    // 确保userInfo.value至少是空对象
+    userInfo.value = {}
   }
 }
 

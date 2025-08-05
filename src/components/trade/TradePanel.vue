@@ -65,21 +65,27 @@
         
         <view v-if="priceType === 'limit'" class="form-item">
           <text class="form-label">委托价格</text>
-          <view class="price-input">
+          <view class="price-input" @tap="focusPriceInput">
             <input 
-              v-model="price" 
-              type="digit" 
-              class="input-field"
+              ref="priceInputRef"
+              :key="forceUpdateKey"
+              :value="price" 
+              @input="onPriceInput"
+              @focus="onPriceFocus"
+              @blur="onPriceBlur"
+              type="number" 
+              inputmode="decimal"
+              class="input-field price-input-field"
               placeholder="请输入价格"
-              @input="validatePrice"
+              step="0.01"
             />
           </view>
-          <view v-if="selectedStock" class="price-suggestions">
+          <view class="price-suggestions" style="position: relative; z-index: 2;">
             <view 
               v-for="suggestion in priceSuggestions" 
               :key="suggestion.label" 
               class="suggestion-item"
-              @tap="setPrice(suggestion.value)"
+              @tap="debugPriceClick(suggestion)"
             >
               <text class="suggestion-label">{{ suggestion.label }}</text>
               <text class="suggestion-value">{{ formatPrice(suggestion.value) }}</text>
@@ -91,11 +97,12 @@
           <text class="form-label">委托数量</text>
           <view class="volume-input">
             <input 
-              v-model="volume" 
+              :key="forceUpdateKey"
+              :value="volume" 
+              @input="onVolumeInput"
               type="number" 
               class="input-field"
               placeholder="请输入数量"
-              @input="validateVolume"
             />
           </view>
           <view v-if="selectedStock" class="volume-suggestions">
@@ -158,7 +165,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineEmits, onMounted, onUnmounted } from 'vue'
+import { ref, computed, defineEmits, onMounted, onUnmounted, watch, nextTick, reactive } from 'vue'
 import { formatPrice, formatChangePercent, getColorClass } from '@/utils/format'
 import { validatePrice as validatePriceUtil, validateVolume as validateVolumeUtil } from '@/utils/validation'
 import { useMarketStore } from '@/stores/useMarketStore'
@@ -170,12 +177,33 @@ const tradeType = ref<'buy' | 'sell'>('buy')
 const priceType = ref<'limit' | 'market'>('limit')
 const selectedStock = ref<any>(null)
 const price = ref('')
+const forceUpdateKey = ref(0)
+const priceInputRef = ref(null)
+
+// Add watcher to monitor price changes
+watch(price, (newValue, oldValue) => {
+  console.log('Price value changed:', { newValue, oldValue })
+})
+
+const forceUpdate = () => {
+  forceUpdateKey.value++
+  nextTick(() => {
+    console.log('Component force updated, price value:', price.value)
+  })
+}
 const volume = ref('')
 const remark = ref('')
 let priceUpdateInterval: any = null
 
 const priceSuggestions = computed(() => {
-  if (!selectedStock.value) return []
+  if (!selectedStock.value) {
+    // 提供默认的测试价格建议
+    return [
+      { label: '跌停价', value: 9.00 },
+      { label: '当前价', value: 10.00 },
+      { label: '涨停价', value: 11.00 }
+    ]
+  }
   
   return [
     { label: '跌停价', value: selectedStock.value.price * 0.9 },
@@ -240,17 +268,114 @@ const selectStock = () => {
   })
 }
 
-const setPrice = (value: number) => {
-  price.value = value.toFixed(2)
+const focusPriceInput = () => {
+  console.log('Price input container clicked')
+  // 在uni-app中，直接触发input事件来激活输入框
+  nextTick(() => {
+    if (priceInputRef.value) {
+      try {
+        // 尝试使用uni-app的方式聚焦
+        uni.createSelectorQuery().select('.price-input-field').fields({
+          node: true,
+          size: true
+        }).exec((res) => {
+          if (res[0] && res[0].node) {
+            res[0].node.focus()
+          }
+        })
+      } catch (error) {
+        console.log('Focus method not available:', error)
+        // 如果focus不可用，可以通过其他方式提示用户
+      }
+    }
+  })
+}
+
+const onPriceFocus = () => {
+  console.log('Price input focused')
+}
+
+const onPriceBlur = () => {
+  console.log('Price input blurred')
+}
+
+const testPriceSet = () => {
+  console.log('=== TEST PRICE SET ===')
+  console.log('Testing price setting functionality')
+  
+  const testPrice = 123.45
+  console.log('Setting test price:', testPrice)
+  
+  price.value = testPrice.toFixed(2)
+  console.log('Price ref set to:', price.value)
+  
+  // Force component update to ensure input field refreshes
+  forceUpdate()
+  
+  setTimeout(() => {
+    console.log('Price ref after timeout:', price.value)
+  }, 100)
+}
+
+const debugPriceClick = (suggestion: any) => {
+  console.log('=== PRICE SUGGESTION CLICKED ===')
+  console.log('Suggestion object:', suggestion)
+  console.log('Label:', suggestion.label)
+  console.log('Value:', suggestion.value)
+  console.log('Type of value:', typeof suggestion.value)
+  console.log('Current price ref before:', price.value)
+  
+  if (suggestion && typeof suggestion.value === 'number') {
+    handlePriceClick(suggestion.value)
+  } else {
+    console.error('Invalid suggestion value:', suggestion)
+  }
+}
+
+const handlePriceClick = (value: number) => {
+  console.log('=== HANDLE PRICE CLICK ===')
+  console.log('Price clicked:', value)
+  console.log('Type of value:', typeof value)
+  
+  const formattedPrice = value.toFixed(2)
+  console.log('Formatted price:', formattedPrice)
+  
+  price.value = formattedPrice
+  console.log('Price ref set to:', price.value)
+  console.log('Price ref raw:', price)
+  
+  // Force component update to ensure input field refreshes
+  forceUpdate()
+  
+  // Force update check
+  setTimeout(() => {
+    console.log('Price ref after timeout:', price.value)
+  }, 100)
 }
 
 const setVolume = (value: number) => {
   volume.value = value.toString()
 }
 
+const onPriceInput = (event: any) => {
+  const value = event.detail.value
+  console.log('Price input event:', value)
+  price.value = value
+  validatePrice(event)
+}
+
+const onVolumeInput = (event: any) => {
+  const value = event.detail.value
+  console.log('Volume input event:', value)
+  volume.value = value
+  validateVolume(event)
+}
+
 const validatePrice = (event: any) => {
   const value = event.detail.value
+  console.log('Validating price:', value, 'Validation result:', validatePriceUtil(parseFloat(value)))
   if (value && !validatePriceUtil(parseFloat(value))) {
+    console.log('Price validation failed, resetting to empty')
     price.value = ''
   }
 }
@@ -480,15 +605,75 @@ defineExpose({
   border: 1px solid #d9d9d9;
   border-radius: 6px;
   overflow: hidden;
+  position: relative;
 }
 
 .input-field {
   width: 100%;
-  padding: 12px;
+  padding: 16px 12px;
   font-size: 14px;
   border: none;
   outline: none;
   background-color: transparent;
+  pointer-events: auto;
+  min-height: 20px;
+  line-height: 1.4;
+}
+
+/* 确保 uni-input 内部元素可点击 */
+.input-field >>> .uni-input-wrapper,
+.input-field >>> .uni-input-input,
+.input-field >>> .uni-input-placeholder {
+  pointer-events: auto !important;
+  cursor: text !important;
+}
+
+/* 修复 uni-input 样式 */
+.input-field >>> .uni-input-wrapper {
+  width: 100%;
+  min-height: 20px;
+}
+
+.input-field >>> .uni-input-input {
+  width: 100%;
+  font-size: 14px;
+  color: #333;
+  background: transparent;
+}
+
+.input-field >>> .uni-input-placeholder {
+  color: #999;
+  font-size: 14px;
+}
+
+/* 专门针对委托价格输入框的修复 */
+.price-input-field {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+.price-input-field >>> * {
+  pointer-events: auto !important;
+}
+
+/* 确保价格输入框容器可点击 */
+.price-input {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+.price-input * {
+  pointer-events: auto !important;
+}
+
+/* 移除可能阻止点击的样式 */
+.price-input,
+.price-input *,
+.price-input-field,
+.price-input-field * {
+  user-select: auto !important;
+  -webkit-user-select: auto !important;
+  -webkit-touch-callout: default !important;
 }
 
 .price-suggestions,
@@ -507,6 +692,13 @@ defineExpose({
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  border: 1px solid #ddd;
+  user-select: none;
+}
+
+.suggestion-item:hover {
+  background-color: #e8f4fd;
+  border-color: #1890ff;
 }
 
 .suggestion-item:active {
