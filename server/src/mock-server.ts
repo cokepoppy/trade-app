@@ -211,17 +211,44 @@ app.get('/api/market/news', (req, res) => {
 // Stock related endpoints
 app.get('/api/stock/:code/quote', (req, res) => {
   const { code } = req.params;
+  
+  // 根据股票代码返回真实的股票名称
+  const stockNames: Record<string, string> = {
+    '000001': '平安银行',
+    '000002': '万科A',
+    '000858': '五粮液',
+    '600036': '招商银行',
+    '600519': '贵州茅台',
+    '600887': '伊利股份',
+    '000895': '双汇发展',
+    '600000': '浦发银行',
+    '600028': '中国石化',
+    '601318': '中国平安'
+  };
+  
+  const stockName = stockNames[code] || `股票${code}`;
+  
+  // 生成更真实的股票数据
+  const basePrice = 10 + Math.random() * 100;
+  const change = (Math.random() - 0.5) * 2;
+  const changePercent = (change / basePrice) * 100;
+  const volume = Math.floor(Math.random() * 100000000) + 10000000;
+  const turnover = volume * basePrice;
+  
   res.json({
     code: 0,
     message: 'success',
     data: {
       code,
-      name: '示例股票',
-      price: 12.34,
-      change: 0.56,
-      changePercent: 4.76,
-      volume: 123456789,
-      turnover: 987654321,
+      name: stockName,
+      price: basePrice,
+      change: change,
+      changePercent: changePercent,
+      volume: volume,
+      amount: turnover,
+      high: basePrice + Math.random() * 2,
+      low: basePrice - Math.random() * 2,
+      open: basePrice + (Math.random() - 0.5) * 1,
       timestamp: Date.now()
     }
   });
@@ -229,20 +256,57 @@ app.get('/api/stock/:code/quote', (req, res) => {
 
 app.get('/api/stock/:code/detail', (req, res) => {
   const { code } = req.params;
+  
+  // 根据股票代码返回真实的股票名称
+  const stockNames: Record<string, string> = {
+    '000001': '平安银行',
+    '000002': '万科A',
+    '000858': '五粮液',
+    '600036': '招商银行',
+    '600519': '贵州茅台',
+    '600887': '伊利股份',
+    '000895': '双汇发展',
+    '600000': '浦发银行',
+    '600028': '中国石化',
+    '601318': '中国平安'
+  };
+  
+  const stockName = stockNames[code] || `股票${code}`;
+  
+  // 生成更真实的股票数据
+  const basePrice = 10 + Math.random() * 100;
+  const change = (Math.random() - 0.5) * 2;
+  const changePercent = (change / basePrice) * 100;
+  const volume = Math.floor(Math.random() * 100000000) + 10000000;
+  const turnover = volume * basePrice;
+  const marketCap = turnover * (Math.random() * 10 + 5);
+  
+  // 计算均价和换手率
+  const avgPrice = basePrice + (Math.random() - 0.5) * 0.5;
+  const turnoverRate = (volume / (marketCap / basePrice)) * 100;
+  
   res.json({
     code: 0,
     message: 'success',
     data: {
       code,
-      name: '示例股票',
-      price: 12.34,
-      change: 0.56,
-      changePercent: 4.76,
-      volume: 123456789,
-      turnover: 987654321,
-      marketCap: 1234567890123,
-      pe: 15.67,
-      pb: 1.23,
+      name: stockName,
+      price: basePrice,
+      change: change,
+      changePercent: changePercent,
+      volume: volume,
+      amount: turnover,
+      high: basePrice + Math.random() * 2,
+      low: basePrice - Math.random() * 2,
+      open: basePrice + (Math.random() - 0.5) * 1,
+      avgPrice: avgPrice,
+      turnoverRate: turnoverRate,
+      marketCap: marketCap,
+      pe: 15 + Math.random() * 30,
+      pb: 1 + Math.random() * 5,
+      eps: basePrice / (15 + Math.random() * 30),
+      navps: basePrice / (1 + Math.random() * 5),
+      totalShares: Math.floor(marketCap / basePrice),
       timestamp: Date.now()
     }
   });

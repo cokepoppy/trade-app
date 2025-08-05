@@ -474,6 +474,8 @@ export class RealTimeMarketDataServer {
   }
 
   private startRealTimeDataPush(clientId: string, stockCode: string) {
+    console.log(`[RealTimeMarketData] Starting real-time data push for ${stockCode}`)
+    
     // 每3秒推送一次实时行情数据
     const interval = setInterval(() => {
       this.updateStockData(stockCode)
@@ -484,6 +486,8 @@ export class RealTimeMarketDataServer {
       this.dataIntervals.set(stockCode, [])
     }
     this.dataIntervals.get(stockCode)!.push(interval)
+    
+    console.log(`[RealTimeMarketData] Real-time data push started for ${stockCode}`)
   }
 
   private startTimeShareDataPush(clientId: string, stockCode: string) {
@@ -612,25 +616,20 @@ export class RealTimeMarketDataServer {
 
   private broadcastStockData(stockCode: string) {
     const stockData = this.stockData.get(stockCode)
-    if (!stockData) return
-
-    const subscriptions = this.subscriptions.get(stockCode)
-    if (!subscriptions) return
+    if (!stockData) {
+      console.log(`[RealTimeMarketData] No stock data found for ${stockCode}`)
+      return
+    }
 
     const message = {
-      type: 'stock_quote',
+      type: 'stock_data',
       data: stockData,
       timestamp: Date.now()
     }
 
-    subscriptions.forEach(subscription => {
-      if (subscription.active && subscription.dataType === 'quote') {
-        const clientSocket = this.io.sockets.sockets.get(subscription.clientId)
-        if (clientSocket) {
-          clientSocket.emit('stock_data', message)
-        }
-      }
-    })
+    // 发送给所有订阅该股票的客户端
+    console.log(`[RealTimeMarketData] Broadcasting stock data for ${stockCode}:`, stockData.price)
+    this.io.emit('stock_data', message)
   }
 
   private broadcastTimeShareData(stockCode: string) {
@@ -688,7 +687,7 @@ export class RealTimeMarketDataServer {
     if (!stockData) return
 
     socket.emit('stock_data', {
-      type: 'stock_quote',
+      type: 'stock_data',
       data: stockData,
       timestamp: Date.now()
     })

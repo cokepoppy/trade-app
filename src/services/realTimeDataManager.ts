@@ -250,7 +250,8 @@ export class RealTimeDataManager {
   }
 
   private handleStockData(message: WebSocketMessage) {
-    const stockData: RealTimeStockData = message.data
+    const stockData: RealTimeStockData = message.data.data
+    this.log('Processing stock data:', stockData.code, stockData.price)
     this.emit('stock_update', stockData)
     
     // 触发特定股票的更新事件
@@ -258,7 +259,7 @@ export class RealTimeDataManager {
   }
 
   private handleTimeShareData(message: WebSocketMessage) {
-    const { code, data } = message.data
+    const { code, data } = message.data.data
     const timeShareData: TimeShareData[] = data
     this.emit('timeshare_update', { code, data: timeShareData })
     
@@ -267,7 +268,7 @@ export class RealTimeDataManager {
   }
 
   private handleKLineData(message: WebSocketMessage) {
-    const { code, interval, data } = message.data
+    const { code, interval, data } = message.data.data
     const kLineData: KLineData[] = data
     this.emit('kline_update', { code, interval, data: kLineData })
     
@@ -276,7 +277,7 @@ export class RealTimeDataManager {
   }
 
   private handleMarketDepth(message: WebSocketMessage) {
-    const depthData: MarketDepth = message.data
+    const depthData: MarketDepth = message.data.data
     this.emit('depth_update', depthData)
     
     // 触发特定股票的深度更新事件

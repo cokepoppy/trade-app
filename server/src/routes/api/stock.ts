@@ -5,21 +5,45 @@ const router = Router();
 // 2.9 股票详情
 router.get('/:code/quote', (req, res) => {
   const { code } = req.params;
+  
+  // 根据股票代码返回真实的股票名称
+  const stockNames: Record<string, string> = {
+    '000001': '平安银行',
+    '000002': '万科A',
+    '000858': '五粮液',
+    '600036': '招商银行',
+    '600519': '贵州茅台',
+    '600887': '伊利股份',
+    '000895': '双汇发展',
+    '600000': '浦发银行',
+    '600028': '中国石化',
+    '601318': '中国平安'
+  };
+  
+  const stockName = stockNames[code] || `股票${code}`;
+  
+  // 生成更真实的股票数据
+  const basePrice = 10 + Math.random() * 100;
+  const change = (Math.random() - 0.5) * 2;
+  const changePercent = (change / basePrice) * 100;
+  const volume = Math.floor(Math.random() * 100000000) + 10000000;
+  const turnover = volume * basePrice;
+  
   res.json({
     code: 0,
     message: '成功',
     data: {
       code,
-      name: '示例股票',
-      price: 12.34,
-      change: 0.56,
-      changePercent: 4.76,
-      volume: 123456789,
-      turnover: 987654321,
-      high: 12.50,
-      low: 12.00,
-      open: 12.10,
-      preClose: 11.78,
+      name: stockName,
+      price: basePrice,
+      change: change,
+      changePercent: changePercent,
+      volume: volume,
+      turnover: turnover,
+      high: basePrice + Math.random() * 2,
+      low: basePrice - Math.random() * 2,
+      open: basePrice + (Math.random() - 0.5) * 1,
+      preClose: basePrice - change,
       timestamp: Date.now()
     }
   });
@@ -27,26 +51,51 @@ router.get('/:code/quote', (req, res) => {
 
 router.get('/:code/detail', (req, res) => {
   const { code } = req.params;
+  
+  // 根据股票代码返回真实的股票名称
+  const stockNames: Record<string, string> = {
+    '000001': '平安银行',
+    '000002': '万科A',
+    '000858': '五粮液',
+    '600036': '招商银行',
+    '600519': '贵州茅台',
+    '600887': '伊利股份',
+    '000895': '双汇发展',
+    '600000': '浦发银行',
+    '600028': '中国石化',
+    '601318': '中国平安'
+  };
+  
+  const stockName = stockNames[code] || `股票${code}`;
+  
+  // 生成更真实的股票数据
+  const basePrice = 10 + Math.random() * 100;
+  const change = (Math.random() - 0.5) * 2;
+  const changePercent = (change / basePrice) * 100;
+  const volume = Math.floor(Math.random() * 100000000) + 10000000;
+  const turnover = volume * basePrice;
+  const marketCap = turnover * (Math.random() * 10 + 5);
+  
   res.json({
     code: 0,
     message: '成功',
     data: {
       code,
-      name: '示例股票',
-      price: 12.34,
-      change: 0.56,
-      changePercent: 4.76,
-      volume: 123456789,
-      turnover: 987654321,
-      marketCap: 1234567890123,
-      pe: 15.67,
-      pb: 1.23,
-      dividendYield: 2.5,
-      eps: 0.78,
-      bps: 10.02,
-      roe: 5.2,
-      roa: 2.1,
-      debtRatio: 45.6,
+      name: stockName,
+      price: basePrice,
+      change: change,
+      changePercent: changePercent,
+      volume: volume,
+      turnover: turnover,
+      marketCap: marketCap,
+      pe: 15 + Math.random() * 30,
+      pb: 1 + Math.random() * 5,
+      dividendYield: 1 + Math.random() * 4,
+      eps: basePrice / (15 + Math.random() * 30),
+      bps: basePrice / (1 + Math.random() * 5),
+      roe: 5 + Math.random() * 15,
+      roa: 1 + Math.random() * 5,
+      debtRatio: 30 + Math.random() * 40,
       timestamp: Date.now()
     }
   });
@@ -314,37 +363,82 @@ router.get('/:code/splits', (req, res) => {
 router.post('/batch-quotes', (req, res) => {
   const { codes } = req.body;
   
+  // 根据股票代码返回真实的股票名称
+  const stockNames: Record<string, string> = {
+    '000001': '平安银行',
+    '000002': '万科A',
+    '000858': '五粮液',
+    '600036': '招商银行',
+    '600519': '贵州茅台',
+    '600887': '伊利股份',
+    '000895': '双汇发展',
+    '600000': '浦发银行',
+    '600028': '中国石化',
+    '601318': '中国平安'
+  };
+  
   res.json({
     code: 0,
     message: '成功',
-    data: codes.map((code: string) => ({
-      code,
-      name: `${code}股票`,
-      price: 12.34,
-      change: 0.56,
-      changePercent: 4.76,
-      timestamp: Date.now()
-    }))
+    data: codes.map((code: string) => {
+      const stockName = stockNames[code] || `股票${code}`;
+      const basePrice = 10 + Math.random() * 100;
+      const change = (Math.random() - 0.5) * 2;
+      const changePercent = (change / basePrice) * 100;
+      
+      return {
+        code,
+        name: stockName,
+        price: basePrice,
+        change: change,
+        changePercent: changePercent,
+        timestamp: Date.now()
+      };
+    })
   });
 });
 
 router.post('/batch-details', (req, res) => {
   const { codes } = req.body;
   
+  // 根据股票代码返回真实的股票名称
+  const stockNames: Record<string, string> = {
+    '000001': '平安银行',
+    '000002': '万科A',
+    '000858': '五粮液',
+    '600036': '招商银行',
+    '600519': '贵州茅台',
+    '600887': '伊利股份',
+    '000895': '双汇发展',
+    '600000': '浦发银行',
+    '600028': '中国石化',
+    '601318': '中国平安'
+  };
+  
   res.json({
     code: 0,
     message: '成功',
-    data: codes.map((code: string) => ({
-      code,
-      name: `${code}股票`,
-      price: 12.34,
-      change: 0.56,
-      changePercent: 4.76,
-      marketCap: 1234567890123,
-      pe: 15.67,
-      pb: 1.23,
-      timestamp: Date.now()
-    }))
+    data: codes.map((code: string) => {
+      const stockName = stockNames[code] || `股票${code}`;
+      const basePrice = 10 + Math.random() * 100;
+      const change = (Math.random() - 0.5) * 2;
+      const changePercent = (change / basePrice) * 100;
+      const volume = Math.floor(Math.random() * 100000000) + 10000000;
+      const turnover = volume * basePrice;
+      const marketCap = turnover * (Math.random() * 10 + 5);
+      
+      return {
+        code,
+        name: stockName,
+        price: basePrice,
+        change: change,
+        changePercent: changePercent,
+        marketCap: marketCap,
+        pe: 15 + Math.random() * 30,
+        pb: 1 + Math.random() * 5,
+        timestamp: Date.now()
+      };
+    })
   });
 });
 

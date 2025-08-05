@@ -838,7 +838,7 @@ const initRealTimeDataManager = () => {
     if (!stockCode.value) return
     
     realTimeDataManager = createRealTimeDataManager({
-      url: 'ws://localhost:3000',
+      url: 'http://localhost:3000',
       enableLogging: true
     })
     
