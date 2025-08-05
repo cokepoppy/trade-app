@@ -26,7 +26,7 @@
           <view class="stock-input" @tap="selectStock">
             <text v-if="selectedStock" class="stock-code">{{ selectedStock.code }}</text>
             <text v-else class="stock-placeholder">请选择股票</text>
-            <uni-icons type="arrowright" size="16" color="#999"></uni-icons>
+            <text class="arrow-icon">›</text>
           </view>
         </view>
         
@@ -158,18 +158,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineEmits } from 'vue'
+import { ref, computed, defineEmits, onMounted, onUnmounted } from 'vue'
 import { formatPrice, formatChangePercent, getColorClass } from '@/utils/format'
 import { validatePrice as validatePriceUtil, validateVolume as validateVolumeUtil } from '@/utils/validation'
+import { useMarketStore } from '@/stores/useMarketStore'
 
 const emit = defineEmits(['trade'])
 
+const marketStore = useMarketStore()
 const tradeType = ref<'buy' | 'sell'>('buy')
 const priceType = ref<'limit' | 'market'>('limit')
 const selectedStock = ref<any>(null)
 const price = ref('')
 const volume = ref('')
 const remark = ref('')
+let priceUpdateInterval: any = null
 
 const priceSuggestions = computed(() => {
   if (!selectedStock.value) return []
@@ -280,7 +283,45 @@ const setStock = (stock: any) => {
   selectedStock.value = stock
   price.value = ''
   volume.value = ''
+  startPriceUpdates()
 }
+
+const startPriceUpdates = () => {
+  if (priceUpdateInterval) {
+    clearInterval(priceUpdateInterval)
+  }
+  
+  if (selectedStock.value) {
+    priceUpdateInterval = setInterval(async () => {
+      try {
+        const stockDetail = await marketStore.getStockDetail(selectedStock.value.code)
+        selectedStock.value = {
+          ...selectedStock.value,
+          price: stockDetail.price || stockDetail.currentPrice || selectedStock.value.price,
+          change: stockDetail.change || stockDetail.priceChange || selectedStock.value.change,
+          changePercent: stockDetail.changePercent || stockDetail.priceChangePercent || selectedStock.value.changePercent
+        }
+      } catch (error) {
+        console.error('Price update error:', error)
+      }
+    }, 5000) // 每5秒更新一次价格
+  }
+}
+
+const stopPriceUpdates = () => {
+  if (priceUpdateInterval) {
+    clearInterval(priceUpdateInterval)
+    priceUpdateInterval = null
+  }
+}
+
+onMounted(() => {
+  // 组件挂载时的初始化逻辑
+})
+
+onUnmounted(() => {
+  stopPriceUpdates()
+})
 
 defineExpose({
   setStock
@@ -378,6 +419,12 @@ defineExpose({
 .stock-placeholder {
   font-size: 14px;
   color: #999;
+}
+
+.arrow-icon {
+  font-size: 16px;
+  color: #999;
+  margin-left: 8px;
 }
 
 .stock-name {

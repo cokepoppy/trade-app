@@ -114,10 +114,12 @@ export const useUserStore = defineStore('user', () => {
       console.log('[DEBUG] Storing token:', newToken ? 'Token exists' : 'No token')
       console.log('[DEBUG] Storage before:', Object.keys(storage.getAll()))
       storage.set(storageKeys.USER_TOKEN, newToken)
+      storage.set(storageKeys.REFRESH_TOKEN, newRefreshToken)
       storage.set(storageKeys.USER_INFO, userInfo)
       storage.set(storageKeys.LAST_LOGIN, Date.now())
       console.log('[DEBUG] Storage after:', Object.keys(storage.getAll()))
       console.log('[DEBUG] Token verification:', storage.get(storageKeys.USER_TOKEN) ? 'Token stored successfully' : 'Token storage failed')
+      console.log('[DEBUG] Refresh token verification:', storage.get(storageKeys.REFRESH_TOKEN) ? 'Refresh token stored successfully' : 'Refresh token storage failed')
       
       await Promise.all([
         fetchUserProfile(),
@@ -150,6 +152,7 @@ export const useUserStore = defineStore('user', () => {
       lastLoginTime.value = Date.now()
       
       storage.set(storageKeys.USER_TOKEN, newToken)
+      storage.set(storageKeys.REFRESH_TOKEN, newRefreshToken)
       storage.set(storageKeys.USER_INFO, userInfo)
       storage.set(storageKeys.LAST_LOGIN, Date.now())
       
@@ -191,6 +194,7 @@ export const useUserStore = defineStore('user', () => {
       lastLoginTime.value = 0
       
       storage.remove(storageKeys.USER_TOKEN)
+      storage.remove(storageKeys.REFRESH_TOKEN)
       storage.remove(storageKeys.USER_INFO)
       storage.remove(storageKeys.LAST_LOGIN)
     }
@@ -220,6 +224,7 @@ export const useUserStore = defineStore('user', () => {
       token.value = response.data.token
       refreshToken.value = response.data.refreshToken
       storage.set(storageKeys.USER_TOKEN, token.value)
+      storage.set(storageKeys.REFRESH_TOKEN, refreshToken.value)
       return true
     } catch (err) {
       console.error('Refresh token error:', err)

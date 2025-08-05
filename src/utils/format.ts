@@ -6,11 +6,15 @@ export const formatPercent = (num: number, precision = 2): string => {
   return `${(num * 100).toFixed(precision)}%`
 }
 
-export const formatPrice = (price: number, precision = 2): string => {
-  if (price >= 10000) {
-    return `${(price / 10000).toFixed(precision)}万`
+export const formatPrice = (price: number | undefined | null, precision = 2): string => {
+  if (price === undefined || price === null || isNaN(price)) {
+    return '--'
   }
-  return price.toFixed(precision)
+  const numPrice = Number(price)
+  if (numPrice >= 10000) {
+    return `${(numPrice / 10000).toFixed(precision)}万`
+  }
+  return numPrice.toFixed(precision)
 }
 
 export const formatVolume = (volume: number): string => {
@@ -33,19 +37,31 @@ export const formatMarketValue = (value: number): string => {
   return value.toString()
 }
 
-export const formatChange = (change: number, precision = 2): string => {
-  const sign = change >= 0 ? '+' : ''
-  return `${sign}${change.toFixed(precision)}`
+export const formatChange = (change: number | undefined | null, precision = 2): string => {
+  if (change === undefined || change === null || isNaN(change)) {
+    return '--'
+  }
+  const numChange = Number(change)
+  const sign = numChange >= 0 ? '+' : ''
+  return `${sign}${numChange.toFixed(precision)}`
 }
 
-export const formatChangePercent = (change: number, precision = 2): string => {
-  const sign = change >= 0 ? '+' : ''
-  return `${sign}${(change * 100).toFixed(precision)}%`
+export const formatChangePercent = (change: number | undefined | null, precision = 2): string => {
+  if (change === undefined || change === null || isNaN(change)) {
+    return '--'
+  }
+  const numChange = Number(change)
+  const sign = numChange >= 0 ? '+' : ''
+  return `${sign}${(numChange * 100).toFixed(precision)}%`
 }
 
-export const getColorClass = (value: number): string => {
-  if (value > 0) return 'text-up'
-  if (value < 0) return 'text-down'
+export const getColorClass = (value: number | undefined | null): string => {
+  if (value === undefined || value === null || isNaN(value)) {
+    return 'text-flat'
+  }
+  const numValue = Number(value)
+  if (numValue > 0) return 'text-up'
+  if (numValue < 0) return 'text-down'
   return 'text-flat'
 }
 

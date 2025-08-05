@@ -20,8 +20,7 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
-    'User-Agent': 'TradeApp/1.0.0'
+    'Content-Type': 'application/json'
   },
   withCredentials: true
 })
@@ -61,8 +60,32 @@ apiClient.interceptors.response.use(
   },
   async (error) => {
     const appStore = useAppStore()
+    const originalRequest = error.config
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+      
+      try {
+        const refreshToken = storage.get(storageKeys.REFRESH_TOKEN)
+        if (refreshToken) {
+          const response = await apiClient.post('/user/refresh-token', { refreshToken })
+          const newToken = response.data.data.token
+          storage.set(storageKeys.USER_TOKEN, newToken)
+          originalRequest.headers.Authorization = `Bearer ${newToken}`
+          return apiClient(originalRequest)
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError)
+        storage.remove(storageKeys.USER_TOKEN)
+        storage.remove(storageKeys.REFRESH_TOKEN)
+        appStore.showError('登录已过期，请重新登录')
+        return Promise.reject(error)
+      }
+    }
     
     if (error.response?.status === 401) {
+      storage.remove(storageKeys.USER_TOKEN)
+      storage.remove(storageKeys.REFRESH_TOKEN)
       appStore.showError('登录已过期，请重新登录')
       return Promise.reject(error)
     }
