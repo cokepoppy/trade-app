@@ -4,7 +4,7 @@
 
 ## 🎥 演示视频
 
-观看完整的功能演示: [https://youtu.be/gHP57aae5pQ](https://youtu.be/gHP57aae5pQ)
+观看完整的功能演示: [https://youtu.be/JJMiP6tLbJQ](https://youtu.be/JJMiP6tLbJQ)
 
 ## 🚀 快速开始
 
