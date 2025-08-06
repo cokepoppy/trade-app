@@ -185,6 +185,14 @@ const unreadCount = ref(0)
 
 // 页面加载
 onMounted(async () => {
+  console.log('[DEBUG] 页面开始加载')
+  console.log('[DEBUG] 当前userStore状态:', {
+    isLoggedIn: userStore.isLoggedIn,
+    user: userStore.user,
+    profile: userStore.profile,
+    token: userStore.token
+  })
+  
   await loadUserInfo()
   await loadAssetInfo()
   await loadNotificationCount()
@@ -193,8 +201,69 @@ onMounted(async () => {
 // 加载用户信息
 const loadUserInfo = async () => {
   try {
-    const response = await userService.getUserProfile()
-    userInfo.value = response.data || {}
+    console.log('[DEBUG] 开始加载用户信息')
+    console.log('[DEBUG] userStore.isLoggedIn:', userStore.isLoggedIn)
+    console.log('[DEBUG] userStore.user:', userStore.user)
+    
+    // 检查用户是否已登录
+    if (!userStore.isLoggedIn) {
+      console.log('[DEBUG] 用户未登录，显示默认信息')
+      userInfo.value = {
+        nickname: '未登录',
+        username: '游客',
+        userId: 'N/A'
+      }
+      return
+    }
+    
+    // 用户已登录，优先使用store中的数据
+    if (userStore.user) {
+      console.log('[DEBUG] 使用store中的用户数据')
+      console.log('[DEBUG] userStore.user 详细内容:', JSON.stringify(userStore.user, null, 2))
+      console.log('[DEBUG] userStore.profile 详细内容:', JSON.stringify(userStore.profile, null, 2))
+      
+      userInfo.value = {
+        ...userStore.user,
+        // 合并profile数据（如果存在）
+        ...(userStore.profile || {}),
+        // 确保基本字段存在
+        nickname: userStore.user.nickname || userStore.user.username || '用户',
+        username: userStore.user.username || userStore.user.nickname || '用户',
+        userId: userStore.user.userId || userStore.user.id || 'N/A'
+      }
+      
+      console.log('[DEBUG] 合并后的用户信息:', JSON.stringify(userInfo.value, null, 2))
+    } else {
+      console.log('[DEBUG] userStore.user 为空或未定义')
+      console.log('[DEBUG] userStore 完整状态:', {
+        isLoggedIn: userStore.isLoggedIn,
+        user: userStore.user,
+        profile: userStore.profile,
+        token: userStore.token,
+        hasToken: !!userStore.token
+      })
+    }
+    
+    // 尝试从API获取更完整的用户信息（作为补充）
+    try {
+      console.log('[DEBUG] 尝试从API获取用户详细信息')
+      const response = await userService.getUserProfile()
+      if (response && response.data) {
+        console.log('[DEBUG] API返回的用户信息:', response.data)
+        // 合并API数据，但保留store中的基本信息
+        userInfo.value = {
+          ...userInfo.value,
+          ...response.data,
+          // 确保关键字段不被覆盖为空
+          nickname: response.data.nickname || userInfo.value.nickname,
+          username: response.data.username || userInfo.value.username,
+          userId: response.data.userId || userInfo.value.userId
+        }
+      }
+    } catch (apiError) {
+      console.log('[DEBUG] API调用失败，使用store数据:', apiError)
+      // API失败不影响显示，继续使用store中的数据
+    }
     
     // 设置用户等级
     if (userInfo.value && userInfo.value.level === 'vip') {
@@ -203,24 +272,64 @@ const loadUserInfo = async () => {
       userLevel.value = { text: '高级会员', type: 'success' }
     } else if (userInfo.value && userInfo.value.level === 'admin') {
       userLevel.value = { text: '管理员', type: 'error' }
+    } else {
+      userLevel.value = { text: '普通用户', type: 'info' }
     }
+    
+    console.log('[DEBUG] 最终用户信息:', userInfo.value)
+    console.log('[DEBUG] 用户等级:', userLevel.value)
+    
   } catch (error) {
     console.error('加载用户信息失败:', error)
-    // 确保userInfo.value至少是空对象
-    userInfo.value = {}
+    // 发生错误时，如果用户已登录，至少显示基本信息
+    if (userStore.isLoggedIn && userStore.user) {
+      userInfo.value = {
+        nickname: userStore.user.nickname || userStore.user.username || '用户',
+        username: userStore.user.username || userStore.user.nickname || '用户', 
+        userId: userStore.user.userId || userStore.user.id || 'N/A'
+      }
+    } else {
+      userInfo.value = {
+        nickname: '加载失败',
+        username: '请重试',
+        userId: 'N/A'
+      }
+    }
   }
 }
 
 // 加载资产信息
 const loadAssetInfo = async () => {
   try {
+    console.log('[DEBUG] 开始加载资产信息')
     const response = await tradeService.getAccountOverview()
-    totalAsset.value = response.data.totalAsset || 0
-    availableAmount.value = response.data.availableAmount || 0
-    positionValue.value = response.data.positionValue || 0
-    todayProfit.value = response.data.todayProfit || 0
+    console.log('[DEBUG] 资产API响应:', response)
+    console.log('[DEBUG] 资产数据详情:', JSON.stringify(response.data, null, 2))
+    
+    totalAsset.value = response.data.totalAssets || response.data.totalAsset || 0
+    availableAmount.value = response.data.availableFunds || response.data.available || response.data.availableAmount || 0
+    positionValue.value = response.data.marketValue || response.data.positionValue || 0
+    todayProfit.value = response.data.todayProfit || response.data.profit || 0
+    
+    console.log('[DEBUG] 设置后的资产值:', {
+      totalAsset: totalAsset.value,
+      availableAmount: availableAmount.value,
+      positionValue: positionValue.value,
+      todayProfit: todayProfit.value
+    })
   } catch (error) {
-    console.error('加载资产信息失败:', error)
+    console.error('[DEBUG] 加载资产信息失败:', error)
+    console.error('[DEBUG] 错误详情:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data
+    })
+    
+    // 设置默认值，避免显示空白
+    totalAsset.value = 0
+    availableAmount.value = 0
+    positionValue.value = 0
+    todayProfit.value = 0
   }
 }
 
