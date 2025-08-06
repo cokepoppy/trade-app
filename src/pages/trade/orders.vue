@@ -163,6 +163,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import Header from '@/components/layout/Header.vue'
 import Footer from '@/components/layout/Footer.vue'
 import { useTradeStore } from '@/stores/useTradeStore'
@@ -318,6 +319,13 @@ onMounted(async () => {
   
   await tradeStore.initialize()
   startAutoRefresh()
+})
+
+onShow(async () => {
+  console.log('Orders page onShow - refreshing data...')
+  if (userStore.isLoggedIn) {
+    await refreshData()
+  }
 })
 
 onUnmounted(() => {

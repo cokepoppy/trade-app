@@ -2,6 +2,27 @@ import { Router } from 'express';
 
 const router = Router();
 
+// 内存存储订单数据
+let orders: any[] = [
+  {
+    id: 'order1',
+    code: '000001',
+    name: '平安银行',
+    type: 'buy',
+    priceType: 'limit',
+    price: 12.00,
+    volume: 1000,
+    filledVolume: 0,
+    status: 'pending',
+    orderTime: Date.now(),
+    createTime: Date.now(),
+    amount: 12000,
+    totalFee: 5.0,
+    avgPrice: 0,
+    filledTime: null
+  }
+];
+
 // 3.1 账户管理
 router.get('/accounts', (req, res) => {
   res.json({
@@ -132,28 +153,19 @@ router.get('/accounts/:accountId/positions/:code', (req, res) => {
 
 // 3.3 订单管理
 router.get('/orders', (req, res) => {
+  console.log('=== GET /orders API 调用 ===');
+  console.log('请求时间:', new Date().toLocaleString());
+  console.log('当前订单总数:', orders.length);
+  console.log('订单列表:');
+  orders.forEach((order, index) => {
+    console.log(`  ${index + 1}. ${order.name}(${order.code}) - ${order.type} - ${order.status} - ${new Date(order.orderTime).toLocaleString()}`);
+  });
+  console.log('=== GET /orders API 结束 ===\n');
+  
   res.json({
     code: 0,
     message: '成功',
-    data: {
-      list: [
-        {
-          id: 'order1',
-          code: '000001',
-          name: '平安银行',
-          type: 'buy',
-          priceType: 'limit',
-          price: 12.00,
-          volume: 1000,
-          filledVolume: 0,
-          status: 'pending',
-          createTime: Date.now()
-        }
-      ],
-      total: 1,
-      page: 1,
-      pageSize: 20
-    }
+    data: orders
   });
 });
 
@@ -179,21 +191,50 @@ router.get('/orders/:orderId', (req, res) => {
 });
 
 router.post('/orders', (req, res) => {
-  const { accountId, code, type, priceType, price, volume, remark } = req.body;
+  console.log('=== POST /orders API 调用 ===');
+  console.log('请求时间:', new Date().toLocaleString());
+  console.log('请求体:', JSON.stringify(req.body, null, 2));
+  
+  const { accountId, code, name, type, priceType, price, volume, remark, estimatedAmount, estimatedFee } = req.body;
+  
+  const newOrder = {
+    id: 'order' + Date.now(),
+    orderId: 'order' + Date.now(),
+    accountId: accountId || 'account1',
+    code,
+    name,
+    type,
+    priceType,
+    price: parseFloat(price),
+    volume: parseInt(volume),
+    filledVolume: 0,
+    status: 'pending',
+    orderTime: Date.now(),
+    createTime: Date.now(),
+    amount: estimatedAmount || (parseFloat(price) * parseInt(volume)),
+    totalFee: estimatedFee || 5.0,
+    avgPrice: 0,
+    filledTime: null,
+    remark: remark || ''
+  };
+  
+  console.log('创建的新订单:', JSON.stringify(newOrder, null, 2));
+  
+  // 添加到订单列表开头
+  orders.unshift(newOrder);
+  
+  console.log('订单已添加到列表');
+  console.log('当前订单总数:', orders.length);
+  console.log('订单列表概览:');
+  orders.forEach((order, index) => {
+    console.log(`  ${index + 1}. ${order.name}(${order.code}) - ${order.type} - ${order.status}`);
+  });
+  console.log('=== POST /orders API 结束 ===\n');
+  
   res.json({
     code: 0,
     message: '下单成功',
-    data: {
-      orderId: 'order' + Date.now(),
-      accountId,
-      code,
-      type,
-      priceType,
-      price,
-      volume,
-      status: 'pending',
-      createTime: Date.now()
-    }
+    data: newOrder
   });
 });
 
