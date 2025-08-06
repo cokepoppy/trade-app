@@ -62,41 +62,48 @@ export const useTradeStore = defineStore('trade', () => {
   })
 
   const pendingOrders = computed(() => {
-    return orders.value.filter(order => ['pending', 'partial'].includes(order.status))
+    const ordersArray = Array.isArray(orders.value) ? orders.value : []
+    return ordersArray.filter(order => ['pending', 'partial'].includes(order.status))
   })
 
   const filledOrders = computed(() => {
-    return orders.value.filter(order => order.status === 'filled')
+    const ordersArray = Array.isArray(orders.value) ? orders.value : []
+    return ordersArray.filter(order => order.status === 'filled')
   })
 
   const cancelledOrders = computed(() => {
-    return orders.value.filter(order => order.status === 'cancelled')
+    const ordersArray = Array.isArray(orders.value) ? orders.value : []
+    return ordersArray.filter(order => order.status === 'cancelled')
   })
 
   const todayOrders = computed(() => {
     const today = new Date().toDateString()
-    return orders.value.filter(order => 
+    const ordersArray = Array.isArray(orders.value) ? orders.value : []
+    return ordersArray.filter(order => 
       new Date(order.orderTime).toDateString() === today
     )
   })
 
   const todayDeals = computed(() => {
     const today = new Date().toDateString()
-    return deals.value.filter(deal => 
+    const dealsArray = Array.isArray(deals.value) ? deals.value : []
+    return dealsArray.filter(deal => 
       new Date(deal.dealTime).toDateString() === today
     )
   })
 
   const todayFundFlows = computed(() => {
     const today = new Date().toDateString()
-    return fundFlows.value.filter(flow => 
+    const flowsArray = Array.isArray(fundFlows.value) ? fundFlows.value : []
+    return flowsArray.filter(flow => 
       new Date(flow.createTime).toDateString() === today
     )
   })
 
   const positionByCode = computed(() => {
     const result: Record<string, TradePosition> = {}
-    positions.value.forEach(position => {
+    const positionsArray = Array.isArray(positions.value) ? positions.value : []
+    positionsArray.forEach(position => {
       result[position.code] = position
     })
     return result
@@ -107,18 +114,26 @@ export const useTradeStore = defineStore('trade', () => {
       loading.value = true
       error.value = null
       
-      await Promise.all([
-        fetchAccounts(),
-        fetchSettings()
-      ])
+      // 使用更长的延迟和更好的错误处理来避免429错误
+      console.log('Trade store initialization started')
       
-      if (currentAccount.value) {
-        await Promise.all([
-          fetchPositions(),
-          fetchOrders(),
-          fetchFundFlows()
-        ])
-      }
+      // 只加载最关键的数据，其他数据延迟加载
+      await fetchAccountsWithRetry()
+      
+      // 延迟加载其他数据
+      setTimeout(async () => {
+        try {
+          await fetchSettingsWithRetry()
+          if (currentAccount.value) {
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            await fetchPositions()
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            await fetchOrders()
+          }
+        } catch (err) {
+          console.error('Delayed data loading error:', err)
+        }
+      }, 3000) // 3秒后开始加载其他数据
       
       lastUpdate.value = Date.now()
     } catch (err) {
@@ -130,57 +145,190 @@ export const useTradeStore = defineStore('trade', () => {
   }
 
   const fetchAccounts = async () => {
-    try {
-      const response = await tradeService.getAccounts()
-      accounts.value = response.data
-    } catch (err) {
-      console.error('Fetch accounts error:', err)
+    let retryCount = 0
+    const maxRetries = 3
+    const baseDelay = 1000 // 1 second
+    
+    while (retryCount <= maxRetries) {
+      try {
+        const response = await tradeService.getAccounts()
+        const responseData = response.data
+        if (Array.isArray(responseData)) {
+          accounts.value = responseData
+          return
+        } else {
+          console.warn('Accounts API response data is not an array:', responseData)
+          accounts.value = []
+          return
+        }
+      } catch (err: any) {
+        if (err.response?.status === 429 && retryCount < maxRetries) {
+          retryCount++
+          const delay = baseDelay * Math.pow(2, retryCount) // Exponential backoff
+          console.log(`Rate limited, retrying in ${delay}ms (attempt ${retryCount}/${maxRetries})`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        } else {
+          console.error('Fetch accounts error:', err)
+          accounts.value = []
+          return
+        }
+      }
     }
   }
 
   const fetchPositions = async (accountId?: string) => {
     try {
       const response = await tradeService.getPositions(accountId)
-      positions.value = response.data
+      const responseData = response.data
+      if (Array.isArray(responseData)) {
+        positions.value = responseData
+      } else {
+        console.warn('Positions API response data is not an array:', responseData)
+        positions.value = []
+      }
     } catch (err) {
       console.error('Fetch positions error:', err)
+      positions.value = []
     }
   }
 
   const fetchOrders = async (params?: any) => {
     try {
       const response = await tradeService.getOrders(params)
-      orders.value = response.data
+      // Ensure response.data is always an array
+      const responseData = response.data
+      if (Array.isArray(responseData)) {
+        orders.value = responseData
+      } else if (responseData && responseData.list && Array.isArray(responseData.list)) {
+        // Handle paginated response structure
+        orders.value = responseData.list
+      } else {
+        console.warn('Orders API response data is not an array:', responseData)
+        orders.value = []
+      }
     } catch (err) {
       console.error('Fetch orders error:', err)
+      orders.value = []
     }
   }
 
   const fetchDeals = async (params?: any) => {
     try {
       const response = await tradeService.getDeals(params)
-      deals.value = response.data
+      const responseData = response.data
+      if (Array.isArray(responseData)) {
+        deals.value = responseData
+      } else if (responseData && responseData.list && Array.isArray(responseData.list)) {
+        // Handle paginated response structure
+        deals.value = responseData.list
+      } else {
+        console.warn('Deals API response data is not an array:', responseData)
+        deals.value = []
+      }
     } catch (err) {
       console.error('Fetch deals error:', err)
+      deals.value = []
     }
   }
 
   const fetchFundFlows = async (params?: any) => {
     try {
       const response = await tradeService.getFundFlows(params)
-      fundFlows.value = response.data
+      const responseData = response.data
+      if (Array.isArray(responseData)) {
+        fundFlows.value = responseData
+      } else if (responseData && responseData.list && Array.isArray(responseData.list)) {
+        // Handle paginated response structure
+        fundFlows.value = responseData.list
+      } else {
+        console.warn('Fund flows API response data is not an array:', responseData)
+        fundFlows.value = []
+      }
     } catch (err) {
       console.error('Fetch fund flows error:', err)
+      fundFlows.value = []
+    }
+  }
+
+  const fetchAccountsWithRetry = async () => {
+    let retryCount = 0
+    const maxRetries = 5
+    const baseDelay = 3000 // 3 seconds
+    
+    while (retryCount <= maxRetries) {
+      try {
+        const response = await tradeService.getAccounts()
+        const responseData = response.data
+        if (Array.isArray(responseData)) {
+          accounts.value = responseData
+          return
+        } else {
+          console.warn('Accounts API response data is not an array:', responseData)
+          accounts.value = []
+          return
+        }
+      } catch (err: any) {
+        if (err.response?.status === 429 && retryCount < maxRetries) {
+          retryCount++
+          const delay = baseDelay * Math.pow(2, retryCount) // Exponential backoff
+          console.log(`Rate limited, retrying in ${delay}ms (attempt ${retryCount}/${maxRetries})`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        } else {
+          console.error('Fetch accounts error:', err)
+          accounts.value = []
+          return
+        }
+      }
+    }
+  }
+
+  const fetchSettingsWithRetry = async () => {
+    let retryCount = 0
+    const maxRetries = 5
+    const baseDelay = 3000 // 3 seconds
+    
+    while (retryCount <= maxRetries) {
+      try {
+        const response = await tradeService.getSettings()
+        settings.value = response.data
+        storage.set(storageKeys.TRADE_SETTINGS, response.data)
+        return
+      } catch (err: any) {
+        if (err.response?.status === 429 && retryCount < maxRetries) {
+          retryCount++
+          const delay = baseDelay * Math.pow(2, retryCount) // Exponential backoff
+          console.log(`Rate limited, retrying in ${delay}ms (attempt ${retryCount}/${maxRetries})`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        } else {
+          console.error('Fetch settings error:', err)
+          return
+        }
+      }
     }
   }
 
   const fetchSettings = async () => {
-    try {
-      const response = await tradeService.getSettings()
-      settings.value = response.data
-      storage.set(storageKeys.TRADE_SETTINGS, response.data)
-    } catch (err) {
-      console.error('Fetch settings error:', err)
+    let retryCount = 0
+    const maxRetries = 3
+    const baseDelay = 1000 // 1 second
+    
+    while (retryCount <= maxRetries) {
+      try {
+        const response = await tradeService.getSettings()
+        settings.value = response.data
+        storage.set(storageKeys.TRADE_SETTINGS, response.data)
+        return
+      } catch (err: any) {
+        if (err.response?.status === 429 && retryCount < maxRetries) {
+          retryCount++
+          const delay = baseDelay * Math.pow(2, retryCount) // Exponential backoff
+          console.log(`Rate limited, retrying in ${delay}ms (attempt ${retryCount}/${maxRetries})`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        } else {
+          console.error('Fetch settings error:', err)
+          return
+        }
+      }
     }
   }
 
@@ -206,6 +354,11 @@ export const useTradeStore = defineStore('trade', () => {
     try {
       const response = await tradeService.placeOrder(orderData)
       const newOrder = response.data
+      // Ensure orders.value is always an array before unshift
+      if (!Array.isArray(orders.value)) {
+        console.warn('orders.value is not an array, resetting to empty array')
+        orders.value = []
+      }
       orders.value.unshift(newOrder)
       return newOrder
     } catch (err) {
@@ -219,6 +372,11 @@ export const useTradeStore = defineStore('trade', () => {
     try {
       const response = await tradeService.cancelOrder(orderId)
       const updatedOrder = response.data
+      // Ensure orders.value is always an array
+      if (!Array.isArray(orders.value)) {
+        console.warn('orders.value is not an array, resetting to empty array')
+        orders.value = []
+      }
       const index = orders.value.findIndex(order => order.id === orderId)
       if (index !== -1) {
         orders.value[index] = updatedOrder
@@ -232,6 +390,11 @@ export const useTradeStore = defineStore('trade', () => {
   }
 
   const updateOrder = (orderId: string, updates: Partial<TradeOrder>) => {
+    // Ensure orders.value is always an array
+    if (!Array.isArray(orders.value)) {
+      console.warn('orders.value is not an array, resetting to empty array')
+      orders.value = []
+    }
     const index = orders.value.findIndex(order => order.id === orderId)
     if (index !== -1) {
       orders.value[index] = { ...orders.value[index], ...updates }
@@ -239,6 +402,11 @@ export const useTradeStore = defineStore('trade', () => {
   }
 
   const updatePosition = (code: string, updates: Partial<TradePosition>) => {
+    // Ensure positions.value is always an array
+    if (!Array.isArray(positions.value)) {
+      console.warn('positions.value is not an array, resetting to empty array')
+      positions.value = []
+    }
     const index = positions.value.findIndex(position => position.code === code)
     if (index !== -1) {
       positions.value[index] = { ...positions.value[index], ...updates }
@@ -246,6 +414,11 @@ export const useTradeStore = defineStore('trade', () => {
   }
 
   const updateAccount = (accountId: string, updates: Partial<TradeAccount>) => {
+    // Ensure accounts.value is always an array
+    if (!Array.isArray(accounts.value)) {
+      console.warn('accounts.value is not an array, resetting to empty array')
+      accounts.value = []
+    }
     const index = accounts.value.findIndex(account => account.id === accountId)
     if (index !== -1) {
       accounts.value[index] = { ...accounts.value[index], ...updates }
@@ -294,6 +467,45 @@ export const useTradeStore = defineStore('trade', () => {
     if (riskRatio > 0.8) return 'high'
     if (riskRatio > 0.6) return 'medium'
     return 'low'
+  }
+
+  const getAccountInfo = async () => {
+    try {
+      const response = await tradeService.getAccounts()
+      accounts.value = response.data
+      return currentAccount.value || { availableFunds: 0 }
+    } catch (err) {
+      console.error('Get account info error:', err)
+      throw err
+    }
+  }
+
+  const getStockPosition = async (stockCode: string) => {
+    try {
+      const position = positions.value.find(p => p.code === stockCode)
+      return position || { availableShares: 0 }
+    } catch (err) {
+      console.error('Get stock position error:', err)
+      throw err
+    }
+  }
+
+  const submitOrder = async (orderData: any) => {
+    try {
+      const response = await tradeService.placeOrder(orderData)
+      const newOrder = response.data
+      // Ensure orders.value is always an array before unshift
+      if (!Array.isArray(orders.value)) {
+        console.warn('orders.value is not an array, resetting to empty array')
+        orders.value = []
+      }
+      orders.value.unshift(newOrder)
+      return newOrder
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '下单失败'
+      console.error('Place order error:', err)
+      throw err
+    }
   }
 
   const clearError = () => {
@@ -370,6 +582,9 @@ export const useTradeStore = defineStore('trade', () => {
     calculateOrderProfit,
     calculatePositionRisk,
     getAccountRiskLevel,
+    getAccountInfo,
+    getStockPosition,
+    submitOrder,
     clearError,
     reset
   }

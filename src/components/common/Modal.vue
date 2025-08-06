@@ -5,7 +5,7 @@
       <view class="modal-header">
         <text class="modal-title">{{ title }}</text>
         <view class="modal-close" @tap="handleClose">
-          <uni-icons type="close" size="20" color="#666"></uni-icons>
+          
         </view>
       </view>
       

@@ -38,8 +38,8 @@ export const redisConfig = {
 export const jwtConfig = {
   secret: process.env['JWT_SECRET'] || 'your-secret-key',
   refreshSecret: process.env['JWT_REFRESH_SECRET'] || 'your-refresh-secret',
-  expiresIn: process.env['JWT_EXPIRES_IN'] || '2h',
-  refreshExpiresIn: process.env['JWT_REFRESH_EXPIRES_IN'] || '7d',
+  expiresIn: process.env['JWT_EXPIRES_IN'] || '24h',
+  refreshExpiresIn: process.env['JWT_REFRESH_EXPIRES_IN'] || '30d',
   issuer: process.env['JWT_ISSUER'] || 'trade-app',
   audience: process.env['JWT_AUDIENCE'] || 'trade-app-users',
 };

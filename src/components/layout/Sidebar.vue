@@ -3,7 +3,7 @@
     <view class="sidebar-header">
       <view class="user-info">
         <view class="avatar">
-          <uni-icons type="person" size="32" color="#fff"></uni-icons>
+          
         </view>
         <view class="user-details">
           <text class="username">{{ username }}</text>
@@ -11,7 +11,7 @@
         </view>
       </view>
       <view class="close-btn" @tap="closeSidebar">
-        <uni-icons type="close" size="24" color="#fff"></uni-icons>
+        
       </view>
     </view>
     
@@ -19,19 +19,19 @@
       <view class="menu-section">
         <view class="menu-title">账户管理</view>
         <view class="menu-item" @tap="navigateTo('/pages/trade/funds')">
-          <uni-icons type="wallet" size="20" color="#666"></uni-icons>
+          
           <text>资金管理</text>
         </view>
         <view class="menu-item" @tap="navigateTo('/pages/trade/positions')">
-          <uni-icons type="list" size="20" color="#666"></uni-icons>
+          
           <text>持仓管理</text>
         </view>
         <view class="menu-item" @tap="navigateTo('/pages/trade/orders')">
-          <uni-icons type="document" size="20" color="#666"></uni-icons>
+          
           <text>委托查询</text>
         </view>
         <view class="menu-item" @tap="navigateTo('/pages/trade/deals')">
-          <uni-icons type="checkmarkempty" size="20" color="#666"></uni-icons>
+          
           <text>成交查询</text>
         </view>
       </view>
@@ -39,11 +39,11 @@
       <view class="menu-section">
         <view class="menu-title">自选股管理</view>
         <view class="menu-item" @tap="navigateTo('/pages/profile/watchlist')">
-          <uni-icons type="star" size="20" color="#666"></uni-icons>
+          
           <text>自选股设置</text>
         </view>
         <view class="menu-item" @tap="navigateTo('/pages/market/indices')">
-          <uni-icons type="loop" size="20" color="#666"></uni-icons>
+          
           <text>指数行情</text>
         </view>
       </view>
@@ -51,11 +51,11 @@
       <view class="menu-section">
         <view class="menu-title">系统设置</view>
         <view class="menu-item" @tap="navigateTo('/pages/profile/settings')">
-          <uni-icons type="gear" size="20" color="#666"></uni-icons>
+          
           <text>设置</text>
         </view>
         <view class="menu-item" @tap="navigateTo('/pages/profile/about')">
-          <uni-icons type="info" size="20" color="#666"></uni-icons>
+          
           <text>关于</text>
         </view>
       </view>

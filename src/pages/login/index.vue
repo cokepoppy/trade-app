@@ -33,7 +33,7 @@
         <view v-if="currentLoginType === 'username'" class="form-section">
           <view class="form-group">
             <view class="input-group">
-              <uni-icons type="person" size="20" color="#666"></uni-icons>
+              
               <input
                 v-model="form.username"
                 type="text"
@@ -51,7 +51,7 @@
 
           <view class="form-group">
             <view class="input-group">
-              <uni-icons type="locked" size="20" color="#666"></uni-icons>
+              
               <input
                 v-model="form.password"
                 :type="showPassword ? 'text' : 'password'"
@@ -61,12 +61,10 @@
                 @input="validateField('password')"
                 @keypress="handleKeyPress"
               />
-              <uni-icons 
-                :type="showPassword ? 'eye' : 'eye-slash'" 
-                size="20" 
-                color="#666"
+              <text 
+                class="password-toggle"
                 @tap="togglePassword"
-              ></uni-icons>
+              >{{ showPassword ? '👁️' : '👁️‍🗨️' }}</text>
             </view>
             <text v-if="validation.password" class="form-error">
               {{ validationMessages.password }}
@@ -89,12 +87,10 @@
                 class="captcha-image"
                 @tap="refreshCaptcha"
               />
-              <uni-icons 
-                type="refresh" 
-                size="20" 
-                color="#666"
+              <text 
+                class="refresh-icon"
                 @tap="refreshCaptcha"
-              ></uni-icons>
+              >🔄</text>
             </view>
             <text v-if="validation.captcha" class="form-error">
               {{ validationMessages.captcha }}
@@ -106,7 +102,7 @@
         <view v-if="currentLoginType === 'phone'" class="form-section">
           <view class="form-group">
             <view class="input-group">
-              <uni-icons type="phone" size="20" color="#666"></uni-icons>
+              
               <input
                 v-model="form.phone"
                 type="tel"
@@ -192,11 +188,11 @@
           </view>
           <view class="social-login">
             <view class="social-item" @tap="wechatLogin">
-              <uni-icons type="weixin" size="24" color="#07c160"></uni-icons>
+              
               <text>微信</text>
             </view>
             <view class="social-item" @tap="alipayLogin">
-              <uni-icons type="checkmarkempty" size="24" color="#1677ff"></uni-icons>
+              
               <text>支付宝</text>
             </view>
           </view>
@@ -206,7 +202,7 @@
 
     <!-- 错误提示 -->
     <view v-if="error" class="error-toast" :class="{ shake: errorShake }">
-      <uni-icons type="closeempty" size="16" color="#ff4d4f"></uni-icons>
+      
       <text>{{ error }}</text>
     </view>
 
@@ -750,6 +746,28 @@ const alipayLogin = () => {
 
 .form-input::placeholder {
   color: #999;
+}
+
+.password-toggle {
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+  margin-left: 12px;
+}
+
+.password-toggle:active {
+  opacity: 0.7;
+}
+
+.refresh-icon {
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.refresh-icon:active {
+  opacity: 0.7;
 }
 
 .form-input.error {

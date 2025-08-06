@@ -1,0 +1,233 @@
+<\!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.io Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .connecting {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            height: 400px;
+            overflow-y: auto;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .connect {
+            background-color: #007bff;
+            color: white;
+        }
+        .disconnect {
+            background-color: #dc3545;
+            color: white;
+        }
+        .subscribe {
+            background-color: #28a745;
+            color: white;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Socket.io Connection Test</h1>
+    
+    <div id="status" class="status disconnected">Disconnected</div>
+    
+    <div>
+        <button id="connectBtn" class="connect">Connect</button>
+        <button id="disconnectBtn" class="disconnect">Disconnect</button>
+    </div>
+    
+    <div>
+        <label for="stockCode">Stock Code:</label>
+        <input type="text" id="stockCode" value="000001" placeholder="Enter stock code">
+        <button id="subscribeBtn" class="subscribe">Subscribe to Stock</button>
+    </div>
+    
+    <div>
+        <label for="stockName">Stock Name:</label>
+        <input type="text" id="stockName" value="平安银行" placeholder="Enter stock name">
+    </div>
+    
+    <h3>Log:</h3>
+    <div id="log" class="log"></div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+        class SocketIOTest {
+            constructor() {
+                this.socket = null;
+                this.status = document.getElementById('status');
+                this.log = document.getElementById('log');
+                this.connectBtn = document.getElementById('connectBtn');
+                this.disconnectBtn = document.getElementById('disconnectBtn');
+                this.subscribeBtn = document.getElementById('subscribeBtn');
+                this.stockCodeInput = document.getElementById('stockCode');
+                this.stockNameInput = document.getElementById('stockName');
+                
+                this.connectBtn.addEventListener('click', () => this.connect());
+                this.disconnectBtn.addEventListener('click', () => this.disconnect());
+                this.subscribeBtn.addEventListener('click', () => this.subscribe());
+            }
+            
+            connect() {
+                if (this.socket && this.socket.connected) {
+                    this.log('Already connected');
+                    return;
+                }
+                
+                this.updateStatus('connecting', 'Connecting...');
+                
+                try {
+                    this.socket = io('http://localhost:3000', {
+                        transports: ['websocket', 'polling'],
+                        timeout: 5000,
+                        reconnection: true,
+                        reconnectionAttempts: 5,
+                        reconnectionDelay: 3000
+                    });
+                    
+                    this.socket.on('connect', () => {
+                        this.updateStatus('connected', 'Connected');
+                        this.log('Socket.io connected');
+                        this.log(`Socket ID: ${this.socket.id}`);
+                    });
+                    
+                    this.socket.on('connected', (data) => {
+                        this.log(`Server connection ack: ${JSON.stringify(data)}`);
+                    });
+                    
+                    this.socket.on('stock_data', (data) => {
+                        this.log(`Stock data received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    this.socket.on('timeshare_data', (data) => {
+                        this.log(`Timeshare data received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    this.socket.on('kline_data', (data) => {
+                        this.log(`K-line data received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    this.socket.on('market_depth', (data) => {
+                        this.log(`Market depth received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    this.socket.on('subscription_ack', (data) => {
+                        this.log(`Subscription acknowledged: ${JSON.stringify(data)}`);
+                    });
+                    
+                    this.socket.on('heartbeat', (data) => {
+                        this.log(`Heartbeat received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    this.socket.on('error', (data) => {
+                        this.log(`Error received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    this.socket.on('disconnect', (reason) => {
+                        this.updateStatus('disconnected', 'Disconnected');
+                        this.log(`Socket.io disconnected: ${reason}`);
+                    });
+                    
+                    this.socket.on('connect_error', (error) => {
+                        this.updateStatus('disconnected', 'Connection Error');
+                        this.log(`Connection error: ${error.message}`);
+                    });
+                    
+                } catch (error) {
+                    this.updateStatus('disconnected', 'Connection failed');
+                    this.log(`Connection error: ${error.message}`);
+                }
+            }
+            
+            disconnect() {
+                if (this.socket) {
+                    this.socket.disconnect();
+                    this.socket = null;
+                }
+                this.updateStatus('disconnected', 'Disconnected');
+                this.log('Disconnected manually');
+            }
+            
+            subscribe() {
+                if (\!this.socket || \!this.socket.connected) {
+                    this.log('Please connect first');
+                    return;
+                }
+                
+                const stockCode = this.stockCodeInput.value.trim();
+                const stockName = this.stockNameInput.value.trim();
+                
+                if (\!stockCode) {
+                    this.log('Please enter a stock code');
+                    return;
+                }
+                
+                const message = {
+                    stockCode: stockCode,
+                    name: stockName || `Stock ${stockCode}`
+                };
+                
+                this.socket.emit('subscribe_stock', message);
+                this.log(`Subscribed to stock: ${stockCode} (${stockName})`);
+            }
+            
+            updateStatus(className, text) {
+                this.status.className = `status ${className}`;
+                this.status.textContent = text;
+            }
+            
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.textContent = `[${timestamp}] ${message}`;
+                this.log.appendChild(logEntry);
+                this.log.scrollTop = this.log.scrollHeight;
+            }
+        }
+        
+        // Initialize the test when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new SocketIOTest();
+        });
+    </script>
+</body>
+</html>
+EOF < /dev/null

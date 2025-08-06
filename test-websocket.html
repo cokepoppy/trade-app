@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket 实时行情测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stock-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .chart-container {
+            height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .status.connected {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        .status.disconnected {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+        }
+        .log {
+            height: 200px;
+            overflow-y: auto;
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .price-up {
+            color: #ff4d4f;
+        }
+        .price-down {
+            color: #52c41a;
+        }
+        .depth-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .depth-table th,
+        .depth-table td {
+            padding: 8px;
+            text-align: right;
+            border-bottom: 1px solid #eee;
+        }
+        .depth-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        .ask-price {
+            color: #ff4d4f;
+        }
+        .bid-price {
+            color: #52c41a;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket 实时行情测试</h1>
+    
+    <div class="controls">
+        <button id="connectBtn">连接</button>
+        <button id="disconnectBtn" disabled>断开</button>
+        <button id="subscribeBtn" disabled>订阅数据</button>
+        <button id="unsubscribeBtn" disabled>取消订阅</button>
+        <input type="text" id="stockCode" placeholder="股票代码" value="000001">
+        <input type="text" id="wsUrl" placeholder="WebSocket URL" value="http://localhost:3000" style="width: 300px;">
+    </div>
+
+    <div id="status" class="status disconnected">未连接</div>
+
+    <div class="container">
+        <div class="panel">
+            <h3>股票信息</h3>
+            <div class="stock-info">
+                <div class="info-item">
+                    <span>股票代码:</span>
+                    <span id="stockCodeDisplay">--</span>
+                </div>
+                <div class="info-item">
+                    <span>股票名称:</span>
+                    <span id="stockName">--</span>
+                </div>
+                <div class="info-item">
+                    <span>当前价格:</span>
+                    <span id="currentPrice">--</span>
+                </div>
+                <div class="info-item">
+                    <span>涨跌额:</span>
+                    <span id="priceChange">--</span>
+                </div>
+                <div class="info-item">
+                    <span>涨跌幅:</span>
+                    <span id="changePercent">--</span>
+                </div>
+                <div class="info-item">
+                    <span>成交量:</span>
+                    <span id="volume">--</span>
+                </div>
+                <div class="info-item">
+                    <span>成交额:</span>
+                    <span id="amount">--</span>
+                </div>
+                <div class="info-item">
+                    <span>最高价:</span>
+                    <span id="highPrice">--</span>
+                </div>
+                <div class="info-item">
+                    <span>最低价:</span>
+                    <span id="lowPrice">--</span>
+                </div>
+                <div class="info-item">
+                    <span>开盘价:</span>
+                    <span id="openPrice">--</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>五档行情</h3>
+            <table class="depth-table">
+                <thead>
+                    <tr>
+                        <th>卖五</th>
+                        <th>卖四</th>
+                        <th>卖三</th>
+                        <th>卖二</th>
+                        <th>卖一</th>
+                    </tr>
+                </thead>
+                <tbody id="askRows">
+                    <tr><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
+                </tbody>
+            </table>
+            <table class="depth-table">
+                <thead>
+                    <tr>
+                        <th>买一</th>
+                        <th>买二</th>
+                        <th>买三</th>
+                        <th>买四</th>
+                        <th>买五</th>
+                    </tr>
+                </thead>
+                <tbody id="bidRows">
+                    <tr><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h3>分时图</h3>
+            <div class="chart-container">
+                <canvas id="timeShareChart"></canvas>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>K线图</h3>
+            <div class="chart-container">
+                <canvas id="klineChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h3>日志</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script>
+        class SocketIOTest {
+            constructor() {
+                this.socket = null;
+                this.isConnected = false;
+                this.timeShareData = [];
+                this.klineData = [];
+                this.initElements();
+                this.bindEvents();
+            }
+
+            initElements() {
+                this.connectBtn = document.getElementById('connectBtn');
+                this.disconnectBtn = document.getElementById('disconnectBtn');
+                this.subscribeBtn = document.getElementById('subscribeBtn');
+                this.unsubscribeBtn = document.getElementById('unsubscribeBtn');
+                this.stockCodeInput = document.getElementById('stockCode');
+                this.wsUrlInput = document.getElementById('wsUrl');
+                this.statusDiv = document.getElementById('status');
+                this.logDiv = document.getElementById('log');
+                
+                // 股票信息元素
+                this.stockCodeDisplay = document.getElementById('stockCodeDisplay');
+                this.stockName = document.getElementById('stockName');
+                this.currentPrice = document.getElementById('currentPrice');
+                this.priceChange = document.getElementById('priceChange');
+                this.changePercent = document.getElementById('changePercent');
+                this.volume = document.getElementById('volume');
+                this.amount = document.getElementById('amount');
+                this.highPrice = document.getElementById('highPrice');
+                this.lowPrice = document.getElementById('lowPrice');
+                this.openPrice = document.getElementById('openPrice');
+                
+                // 图表元素
+                this.timeShareCanvas = document.getElementById('timeShareChart');
+                this.klineCanvas = document.getElementById('klineChart');
+                this.timeShareCtx = this.timeShareCanvas.getContext('2d');
+                this.klineCtx = this.klineCanvas.getContext('2d');
+                
+                // 深度数据元素
+                this.askRows = document.getElementById('askRows');
+                this.bidRows = document.getElementById('bidRows');
+            }
+
+            bindEvents() {
+                this.connectBtn.addEventListener('click', () => this.connect());
+                this.disconnectBtn.addEventListener('click', () => this.disconnect());
+                this.subscribeBtn.addEventListener('click', () => this.subscribe());
+                this.unsubscribeBtn.addEventListener('click', () => this.unsubscribe());
+            }
+
+            connect() {
+                const url = this.wsUrlInput.value.trim();
+                if (!url) {
+                    this.log('请输入WebSocket URL');
+                    return;
+                }
+
+                this.log(`正在连接到 ${url}...`);
+                this.socket = new WebSocket(url);
+
+                this.socket.onopen = () => {
+                    this.isConnected = true;
+                    this.updateStatus();
+                    this.log('WebSocket 连接成功');
+                    this.subscribeBtn.disabled = false;
+                };
+
+                this.socket.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        this.handleMessage(message);
+                    } catch (error) {
+                        this.log(`消息解析错误: ${error.message}`);
+                    }
+                };
+
+                this.socket.onclose = () => {
+                    this.isConnected = false;
+                    this.updateStatus();
+                    this.log('WebSocket 连接关闭');
+                    this.subscribeBtn.disabled = true;
+                    this.unsubscribeBtn.disabled = true;
+                };
+
+                this.socket.onerror = (error) => {
+                    this.log(`WebSocket 错误: ${error}`);
+                };
+            }
+
+            disconnect() {
+                if (this.socket) {
+                    this.socket.close();
+                    this.socket = null;
+                }
+            }
+
+            subscribe() {
+                const stockCode = this.stockCodeInput.value.trim();
+                if (!stockCode) {
+                    this.log('请输入股票代码');
+                    return;
+                }
+
+                if (this.isConnected && this.socket) {
+                    // 订阅股票数据
+                    this.socket.send(JSON.stringify({
+                        type: 'subscribe_stock',
+                        data: { stockCode, name: `股票${stockCode}` }
+                    }));
+
+                    // 订阅分时数据
+                    this.socket.send(JSON.stringify({
+                        type: 'subscribe_timeshare',
+                        data: { stockCode }
+                    }));
+
+                    // 订阅K线数据
+                    this.socket.send(JSON.stringify({
+                        type: 'subscribe_kline',
+                        data: { stockCode, interval: '1day' }
+                    }));
+
+                    // 订阅深度数据
+                    this.socket.send(JSON.stringify({
+                        type: 'subscribe_depth',
+                        data: { stockCode }
+                    }));
+
+                    this.unsubscribeBtn.disabled = false;
+                    this.log(`已订阅股票 ${stockCode} 的数据`);
+                }
+            }
+
+            unsubscribe() {
+                const stockCode = this.stockCodeInput.value.trim();
+                if (!stockCode) return;
+
+                if (this.isConnected && this.socket) {
+                    this.socket.send(JSON.stringify({
+                        type: 'unsubscribe_stock',
+                        data: { stockCode }
+                    }));
+
+                    this.unsubscribeBtn.disabled = true;
+                    this.log(`已取消订阅股票 ${stockCode} 的数据`);
+                }
+            }
+
+            handleMessage(message) {
+                this.log(`收到消息: ${message.type}`);
+                
+                switch (message.type) {
+                    case 'connected':
+                        this.log(`服务器连接确认: ${message.data.clientId}`);
+                        break;
+                    case 'stock_data':
+                        this.updateStockInfo(message.data);
+                        break;
+                    case 'timeshare_data':
+                        this.updateTimeShareChart(message.data);
+                        break;
+                    case 'kline_data':
+                        this.updateKLineChart(message.data);
+                        break;
+                    case 'market_depth':
+                        this.updateMarketDepth(message.data);
+                        break;
+                    case 'subscription_ack':
+                        this.log(`订阅确认: ${message.data.stockCode}`);
+                        break;
+                    case 'heartbeat':
+                        // 心跳消息，不显示
+                        break;
+                    case 'error':
+                        this.log(`错误: ${message.data.message}`);
+                        break;
+                    default:
+                        this.log(`未知消息类型: ${message.type}`);
+                }
+            }
+
+            updateStockInfo(data) {
+                this.stockCodeDisplay.textContent = data.code;
+                this.stockName.textContent = data.name;
+                this.currentPrice.textContent = data.price.toFixed(2);
+                this.priceChange.textContent = data.change.toFixed(2);
+                this.changePercent.textContent = data.changePercent.toFixed(2) + '%';
+                this.volume.textContent = this.formatVolume(data.volume);
+                this.amount.textContent = this.formatAmount(data.amount);
+                this.highPrice.textContent = data.high.toFixed(2);
+                this.lowPrice.textContent = data.low.toFixed(2);
+                this.openPrice.textContent = data.open.toFixed(2);
+
+                // 设置颜色
+                this.currentPrice.className = data.change >= 0 ? 'price-up' : 'price-down';
+                this.priceChange.className = data.change >= 0 ? 'price-up' : 'price-down';
+                this.changePercent.className = data.change >= 0 ? 'price-up' : 'price-down';
+            }
+
+            updateTimeShareChart(data) {
+                this.timeShareData = data.data;
+                this.drawTimeShareChart();
+            }
+
+            updateKLineChart(data) {
+                this.klineData = data.data;
+                this.drawKLineChart();
+            }
+
+            updateMarketDepth(data) {
+                const askRow = '<tr>' + data.asks.slice().reverse().map(ask => 
+                    `<td class="ask-price">${ask.price.toFixed(2)}</td>`
+                ).join('') + '</tr>';
+                
+                const bidRow = '<tr>' + data.bids.map(bid => 
+                    `<td class="bid-price">${bid.price.toFixed(2)}</td>`
+                ).join('') + '</tr>';
+                
+                this.askRows.innerHTML = askRow;
+                this.bidRows.innerHTML = bidRow;
+            }
+
+            drawTimeShareChart() {
+                const canvas = this.timeShareCanvas;
+                const ctx = this.timeShareCtx;
+                const data = this.timeShareData;
+                
+                if (!data || data.length === 0) return;
+
+                // 设置画布大小
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+
+                const width = canvas.width;
+                const height = canvas.height;
+                const padding = 40;
+
+                // 清空画布
+                ctx.clearRect(0, 0, width, height);
+
+                // 计算价格范围
+                const prices = data.map(d => d.price);
+                const minPrice = Math.min(...prices);
+                const maxPrice = Math.max(...prices);
+                const priceRange = maxPrice - minPrice || 1;
+
+                // 绘制网格
+                ctx.strokeStyle = '#e0e0e0';
+                ctx.lineWidth = 1;
+
+                for (let i = 0; i <= 4; i++) {
+                    const y = padding + (height - 2 * padding) / 4 * i;
+                    ctx.beginPath();
+                    ctx.moveTo(padding, y);
+                    ctx.lineTo(width - padding, y);
+                    ctx.stroke();
+                }
+
+                // 绘制分时线
+                ctx.strokeStyle = '#1890ff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                data.forEach((point, index) => {
+                    const x = padding + (width - 2 * padding) / (data.length - 1) * index;
+                    const y = height - padding - ((point.price - minPrice) / priceRange) * (height - 2 * padding);
+                    
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+
+                ctx.stroke();
+            }
+
+            drawKLineChart() {
+                const canvas = this.klineCanvas;
+                const ctx = this.klineCtx;
+                const data = this.klineData;
+                
+                if (!data || data.length === 0) return;
+
+                // 设置画布大小
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+
+                const width = canvas.width;
+                const height = canvas.height;
+                const padding = 40;
+
+                // 清空画布
+                ctx.clearRect(0, 0, width, height);
+
+                // 计算价格范围
+                const prices = data.map(d => [d.high, d.low]).flat();
+                const minPrice = Math.min(...prices);
+                const maxPrice = Math.max(...prices);
+                const priceRange = maxPrice - minPrice || 1;
+
+                const candleWidth = (width - 2 * padding) / data.length * 0.8;
+                const candleSpacing = (width - 2 * padding) / data.length * 0.2;
+
+                // 绘制K线
+                data.forEach((candle, index) => {
+                    const x = padding + (candleWidth + candleSpacing) * index + candleSpacing / 2;
+                    const highY = height - padding - ((candle.high - minPrice) / priceRange) * (height - 2 * padding);
+                    const lowY = height - padding - ((candle.low - minPrice) / priceRange) * (height - 2 * padding);
+                    const openY = height - padding - ((candle.open - minPrice) / priceRange) * (height - 2 * padding);
+                    const closeY = height - padding - ((candle.close - minPrice) / priceRange) * (height - 2 * padding);
+
+                    const isUp = candle.close >= candle.open;
+                    ctx.strokeStyle = isUp ? '#ff4d4f' : '#52c41a';
+                    ctx.fillStyle = isUp ? '#ff4d4f' : '#52c41a';
+
+                    // 绘制影线
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(x + candleWidth / 2, highY);
+                    ctx.lineTo(x + candleWidth / 2, lowY);
+                    ctx.stroke();
+
+                    // 绘制实体
+                    const bodyTop = Math.min(openY, closeY);
+                    const bodyHeight = Math.abs(closeY - openY);
+                    
+                    if (bodyHeight > 1) {
+                        ctx.fillRect(x, bodyTop, candleWidth, bodyHeight);
+                    } else {
+                        ctx.beginPath();
+                        ctx.moveTo(x, bodyTop);
+                        ctx.lineTo(x + candleWidth, bodyTop);
+                        ctx.stroke();
+                    }
+                });
+            }
+
+            updateStatus() {
+                if (this.isConnected) {
+                    this.statusDiv.className = 'status connected';
+                    this.statusDiv.textContent = '已连接';
+                    this.connectBtn.disabled = true;
+                    this.disconnectBtn.disabled = false;
+                } else {
+                    this.statusDiv.className = 'status disconnected';
+                    this.statusDiv.textContent = '未连接';
+                    this.connectBtn.disabled = false;
+                    this.disconnectBtn.disabled = true;
+                }
+            }
+
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                this.logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+                this.logDiv.scrollTop = this.logDiv.scrollHeight;
+            }
+
+            formatVolume(volume) {
+                if (volume >= 100000000) {
+                    return (volume / 100000000).toFixed(2) + '亿';
+                } else if (volume >= 10000) {
+                    return (volume / 10000).toFixed(2) + '万';
+                }
+                return volume.toString();
+            }
+
+            formatAmount(amount) {
+                if (amount >= 100000000) {
+                    return (amount / 100000000).toFixed(2) + '亿';
+                } else if (amount >= 10000) {
+                    return (amount / 10000).toFixed(2) + '万';
+                }
+                return amount.toString();
+            }
+        }
+
+        // 初始化测试
+        const test = new WebSocketTest();
+    </script>
+</body>
+</html>

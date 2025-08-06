@@ -312,6 +312,649 @@ app.get('/api/stock/:code/detail', (req, res) => {
   });
 });
 
+// Mock trade data
+const mockAccounts = [
+  {
+    id: 'acc_001',
+    userId: 'user_001',
+    accountName: '主账户',
+    accountType: 'stock',
+    accountNumber: '1234567890',
+    status: 'active',
+    balance: 100000,
+    availableBalance: 85000,
+    frozenBalance: 15000,
+    totalAssets: 125000,
+    marketValue: 40000,
+    costAmount: 35000,
+    currentAmount: 40000,
+    profit: 5000,
+    profitPercent: 14.29,
+    todayProfit: 1200,
+    todayProfitPercent: 3.09,
+    margin: 0,
+    marginRate: 0,
+    riskLevel: 'low',
+    createdAt: Date.now() - 86400000 * 30,
+    updatedAt: Date.now()
+  }
+];
+
+// Mock user messages
+const mockMessages = [
+  {
+    id: 'msg_001',
+    userId: 'user_001',
+    type: 'system',
+    title: '系统通知',
+    content: '您的账户安全验证已通过，请继续使用。',
+    summary: '您的账户安全验证已通过，请继续使用。',
+    priority: 'medium',
+    isRead: false,
+    isDeleted: false,
+    createdAt: Date.now() - 3600000,
+    readTime: null,
+    deleteTime: null,
+    relatedId: null,
+    relatedType: null
+  },
+  {
+    id: 'msg_002',
+    userId: 'user_001',
+    type: 'order',
+    title: '订单通知',
+    content: '您的限价买单已提交，请等待成交。',
+    summary: '您的限价买单已提交，请等待成交。',
+    priority: 'high',
+    isRead: false,
+    isDeleted: false,
+    createdAt: Date.now() - 7200000,
+    readTime: null,
+    deleteTime: null,
+    relatedId: 'order_001',
+    relatedType: 'order'
+  },
+  {
+    id: 'msg_003',
+    userId: 'user_001',
+    type: 'news',
+    title: '资讯通知',
+    content: '市场热点更新，请查看最新资讯。',
+    summary: '市场热点更新，请查看最新资讯。',
+    priority: 'low',
+    isRead: true,
+    isDeleted: false,
+    createdAt: Date.now() - 86400000,
+    readTime: Date.now() - 43200000,
+    deleteTime: null,
+    relatedId: null,
+    relatedType: null
+  }
+];
+
+const mockPositions = [
+  {
+    id: 'pos_001',
+    userId: 'user_001',
+    accountId: 'acc_001',
+    code: '000001',
+    name: '平安银行',
+    volume: 1000,
+    availableVolume: 1000,
+    availableShares: 1000,
+    buyPrice: 11.50,
+    currentPrice: 12.34,
+    marketValue: 12340,
+    costAmount: 11500,
+    currentAmount: 12340,
+    profit: 840,
+    profitPercent: 7.30,
+    todayProfit: 120,
+    todayProfitPercent: 0.98,
+    turnoverRate: 0.5,
+    pe: 8.5,
+    pb: 1.2,
+    eps: 1.45,
+    navps: 10.28,
+    totalShares: 1000000000,
+    marketCap: 12340000000,
+    createdAt: Date.now() - 86400000 * 5,
+    updatedAt: Date.now()
+  }
+];
+
+const mockOrders = [
+  {
+    id: 'order_001',
+    userId: 'user_001',
+    accountId: 'acc_001',
+    code: '000001',
+    name: '平安银行',
+    type: 'buy',
+    priceType: 'limit',
+    price: 11.50,
+    volume: 1000,
+    filledVolume: 1000,
+    amount: 11500,
+    filledAmount: 11500,
+    status: 'filled',
+    orderTime: Date.now() - 3600000,
+    filledTime: Date.now() - 1800000,
+    cancelTime: null,
+    rejectReason: null,
+    remark: '测试买入',
+    fee: 5.75,
+    tax: 0,
+    createdAt: Date.now() - 3600000,
+    updatedAt: Date.now() - 1800000
+  },
+  {
+    id: 'order_002',
+    userId: 'user_001',
+    accountId: 'acc_001',
+    code: '000858',
+    name: '五粮液',
+    type: 'buy',
+    priceType: 'limit',
+    price: 155.00,
+    volume: 100,
+    filledVolume: 0,
+    amount: 15500,
+    filledAmount: 0,
+    status: 'pending',
+    orderTime: Date.now() - 300000,
+    filledTime: null,
+    cancelTime: null,
+    rejectReason: null,
+    remark: '测试限价单',
+    fee: 0,
+    tax: 0,
+    createdAt: Date.now() - 300000,
+    updatedAt: Date.now() - 300000
+  }
+];
+
+const mockDeals = [
+  {
+    id: 'deal_001',
+    userId: 'user_001',
+    orderId: 'order_001',
+    accountId: 'acc_001',
+    code: '000001',
+    name: '平安银行',
+    type: 'buy',
+    price: 11.50,
+    volume: 1000,
+    amount: 11500,
+    dealTime: Date.now() - 1800000,
+    fee: 5.75,
+    tax: 0,
+    createdAt: Date.now() - 1800000
+  }
+];
+
+const mockFundFlows = [
+  {
+    id: 'flow_001',
+    userId: 'user_001',
+    accountId: 'acc_001',
+    type: 'deposit',
+    amount: 50000,
+    status: 'completed',
+    paymentMethod: 'bank_transfer',
+    description: '银行转账入金',
+    createTime: Date.now() - 86400000 * 2,
+    completeTime: Date.now() - 86400000 * 2,
+    fee: 0,
+    createdAt: Date.now() - 86400000 * 2,
+    updatedAt: Date.now() - 86400000 * 2
+  },
+  {
+    id: 'flow_002',
+    userId: 'user_001',
+    accountId: 'acc_001',
+    type: 'withdraw',
+    amount: 10000,
+    status: 'completed',
+    paymentMethod: 'bank_card',
+    description: '银行卡出金',
+    createTime: Date.now() - 86400000 * 10,
+    completeTime: Date.now() - 86400000 * 10,
+    fee: 5,
+    createdAt: Date.now() - 86400000 * 10,
+    updatedAt: Date.now() - 86400000 * 10
+  }
+];
+
+const mockSettings = {
+  id: 'settings_001',
+  userId: 'user_001',
+  defaultAccountId: 'acc_001',
+  tradeMode: 'normal',
+  riskLevel: 'medium',
+  marginTrading: false,
+  shortSelling: false,
+  optionsTrading: false,
+  futuresTrading: false,
+  autoConfirm: false,
+  tradePassword: true,
+  biometricAuth: false,
+  notifications: {
+    orderFilled: true,
+    orderCancelled: true,
+    priceAlert: true,
+    newsAlert: false,
+    systemAlert: true
+  },
+  tradingLimits: {
+    maxSingleOrder: 1000000,
+    maxDailyOrders: 100,
+    maxPositionValue: 500000,
+    maxLeverage: 1
+  },
+  createdAt: Date.now() - 86400000 * 30,
+  updatedAt: Date.now()
+};
+
+// Trade API endpoints
+app.get('/api/trade/accounts', (req, res) => {
+  res.json({
+    code: 0,
+    message: 'success',
+    data: mockAccounts
+  });
+});
+
+app.get('/api/trade/accounts/:accountId', (req, res) => {
+  const { accountId } = req.params;
+  const account = mockAccounts.find(acc => acc.id === accountId);
+  
+  if (account) {
+    res.json({
+      code: 0,
+      message: 'success',
+      data: account
+    });
+  } else {
+    res.status(404).json({
+      code: 404,
+      message: '账户不存在',
+      data: null
+    });
+  }
+});
+
+// Additional endpoint for getAccountInfo that returns availableFunds
+app.get('/api/trade/accounts/:accountId/info', (req, res) => {
+  const { accountId } = req.params;
+  const account = mockAccounts.find(acc => acc.id === accountId);
+  
+  if (account) {
+    res.json({
+      code: 0,
+      message: 'success',
+      data: {
+        ...account,
+        availableFunds: account.availableBalance
+      }
+    });
+  } else {
+    res.status(404).json({
+      code: 404,
+      message: '账户不存在',
+      data: null
+    });
+  }
+});
+
+// Also update the main accounts endpoint to include availableFunds
+app.get('/api/trade/accounts', (req, res) => {
+  const accountsWithFunds = mockAccounts.map(account => ({
+    ...account,
+    availableFunds: account.availableBalance
+  }));
+  
+  res.json({
+    code: 0,
+    message: 'success',
+    data: accountsWithFunds
+  });
+});
+
+app.get('/api/trade/positions', (req, res) => {
+  const { accountId } = req.query;
+  let positions = mockPositions;
+  
+  if (accountId) {
+    positions = positions.filter(pos => pos.accountId === accountId);
+  }
+  
+  res.json({
+    code: 0,
+    message: 'success',
+    data: positions
+  });
+});
+
+app.get('/api/trade/orders', (req, res) => {
+  const { accountId, status, limit } = req.query;
+  let orders = mockOrders;
+  
+  if (accountId) {
+    orders = orders.filter(order => order.accountId === accountId);
+  }
+  
+  if (status) {
+    orders = orders.filter(order => order.status === status);
+  }
+  
+  if (limit) {
+    orders = orders.slice(0, parseInt(limit as string));
+  }
+  
+  res.json({
+    code: 0,
+    message: 'success',
+    data: orders
+  });
+});
+
+app.get('/api/trade/orders/:orderId', (req, res) => {
+  const { orderId } = req.params;
+  const order = mockOrders.find(o => o.id === orderId);
+  
+  if (order) {
+    res.json({
+      code: 0,
+      message: 'success',
+      data: order
+    });
+  } else {
+    res.status(404).json({
+      code: 404,
+      message: '订单不存在',
+      data: null
+    });
+  }
+});
+
+app.post('/api/trade/orders', (req, res) => {
+  const newOrder = {
+    id: `order_${Date.now()}`,
+    userId: 'user_001',
+    accountId: req.body.accountId || 'acc_001',
+    code: req.body.code,
+    name: req.body.name,
+    type: req.body.type,
+    priceType: req.body.priceType,
+    price: req.body.price,
+    volume: req.body.volume,
+    filledVolume: 0,
+    amount: req.body.price * req.body.volume,
+    filledAmount: 0,
+    status: 'pending',
+    orderTime: Date.now(),
+    filledTime: null,
+    cancelTime: null,
+    rejectReason: null,
+    remark: req.body.remark || '',
+    fee: 0,
+    tax: 0,
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+  
+  mockOrders.unshift(newOrder);
+  
+  res.json({
+    code: 0,
+    message: 'success',
+    data: newOrder
+  });
+});
+
+app.post('/api/trade/orders/:orderId/cancel', (req, res) => {
+  const { orderId } = req.params;
+  const orderIndex = mockOrders.findIndex(o => o.id === orderId);
+  
+  if (orderIndex !== -1) {
+    mockOrders[orderIndex] = {
+      ...mockOrders[orderIndex],
+      status: 'cancelled',
+      cancelTime: Date.now(),
+      updatedAt: Date.now()
+    };
+    
+    res.json({
+      code: 0,
+      message: 'success',
+      data: mockOrders[orderIndex]
+    });
+  } else {
+    res.status(404).json({
+      code: 404,
+      message: '订单不存在',
+      data: null
+    });
+  }
+});
+
+app.get('/api/trade/deals', (req, res) => {
+  const { accountId, limit } = req.query;
+  let deals = mockDeals;
+  
+  if (accountId) {
+    deals = deals.filter(deal => deal.accountId === accountId);
+  }
+  
+  if (limit) {
+    deals = deals.slice(0, parseInt(limit as string));
+  }
+  
+  res.json({
+    code: 0,
+    message: 'success',
+    data: deals
+  });
+});
+
+app.get('/api/trade/fund-flows', (req, res) => {
+  const { accountId, type, limit } = req.query;
+  let flows = mockFundFlows;
+  
+  if (accountId) {
+    flows = flows.filter(flow => flow.accountId === accountId);
+  }
+  
+  if (type) {
+    flows = flows.filter(flow => flow.type === type);
+  }
+  
+  if (limit) {
+    flows = flows.slice(0, parseInt(limit as string));
+  }
+  
+  res.json({
+    code: 0,
+    message: 'success',
+    data: flows
+  });
+});
+
+app.get('/api/trade/settings', (req, res) => {
+  res.json({
+    code: 0,
+    message: 'success',
+    data: mockSettings
+  });
+});
+
+app.get('/api/trade/statistics', (req, res) => {
+  const stats = {
+    totalProfit: mockAccounts.reduce((sum, acc) => sum + acc.profit, 0),
+    totalProfitPercent: mockAccounts.length > 0 ? 
+      mockAccounts.reduce((sum, acc) => sum + acc.profitPercent, 0) / mockAccounts.length : 0,
+    todayProfit: mockAccounts.reduce((sum, acc) => sum + acc.todayProfit, 0),
+    totalAssets: mockAccounts.reduce((sum, acc) => sum + acc.totalAssets, 0),
+    totalPositions: mockPositions.length,
+    totalOrders: mockOrders.length,
+    totalDeals: mockDeals.length,
+    winRate: mockDeals.length > 0 ? 0.65 : 0,
+    avgProfit: mockDeals.length > 0 ? 850 : 0,
+    maxDrawdown: -5.2,
+    sharpeRatio: 1.45,
+    period: '1M',
+    timestamp: Date.now()
+  };
+  
+  res.json({
+    code: 0,
+    message: 'success',
+    data: stats
+  });
+});
+
+// User message endpoints
+app.get('/api/user/messages/unread', (req, res) => {
+  const unreadMessages = mockMessages.filter(msg => !msg.isRead);
+  
+  res.json({
+    code: 0,
+    message: 'success',
+    data: unreadMessages,
+    timestamp: Date.now()
+  });
+});
+
+app.get('/api/user/messages', (req, res) => {
+  const { page = 1, pageSize = 20, type, isRead, priority } = req.query;
+  
+  let filteredMessages = [...mockMessages];
+  
+  if (type) {
+    filteredMessages = filteredMessages.filter(msg => msg.type === type);
+  }
+  
+  if (isRead !== undefined) {
+    const readStatus = isRead === 'true';
+    filteredMessages = filteredMessages.filter(msg => msg.isRead === readStatus);
+  }
+  
+  if (priority) {
+    filteredMessages = filteredMessages.filter(msg => msg.priority === priority);
+  }
+  
+  const pageNum = parseInt(page as string);
+  const sizeNum = parseInt(pageSize as string);
+  const startIndex = (pageNum - 1) * sizeNum;
+  const endIndex = startIndex + sizeNum;
+  
+  const paginatedMessages = filteredMessages.slice(startIndex, endIndex);
+  
+  res.json({
+    code: 0,
+    message: 'success',
+    data: {
+      list: paginatedMessages,
+      total: filteredMessages.length,
+      page: pageNum,
+      pageSize: sizeNum,
+      totalPages: Math.ceil(filteredMessages.length / sizeNum),
+      hasNext: endIndex < filteredMessages.length,
+      hasPrev: pageNum > 1
+    },
+    timestamp: Date.now()
+  });
+});
+
+app.get('/api/user/messages/:messageId', (req, res) => {
+  const { messageId } = req.params;
+  const message = mockMessages.find(msg => msg.id === messageId);
+  
+  if (message) {
+    res.json({
+      code: 0,
+      message: 'success',
+      data: message,
+      timestamp: Date.now()
+    });
+  } else {
+    res.status(404).json({
+      code: 404,
+      message: '消息不存在',
+      data: null
+    });
+  }
+});
+
+app.post('/api/user/messages/:messageId/read', (req, res) => {
+  const { messageId } = req.params;
+  const messageIndex = mockMessages.findIndex(msg => msg.id === messageId);
+  
+  if (messageIndex !== -1) {
+    mockMessages[messageIndex] = {
+      ...mockMessages[messageIndex],
+      isRead: true,
+      readTime: Date.now()
+    };
+    
+    res.json({
+      code: 0,
+      message: 'success',
+      data: mockMessages[messageIndex],
+      timestamp: Date.now()
+    });
+  } else {
+    res.status(404).json({
+      code: 404,
+      message: '消息不存在',
+      data: null
+    });
+  }
+});
+
+app.post('/api/user/messages/mark-all-read', (req, res) => {
+  mockMessages.forEach(msg => {
+    if (!msg.isRead) {
+      msg.isRead = true;
+      msg.readTime = Date.now();
+    }
+  });
+  
+  res.json({
+    code: 0,
+    message: 'success',
+    data: null,
+    timestamp: Date.now()
+  });
+});
+
+app.delete('/api/user/messages/:messageId', (req, res) => {
+  const { messageId } = req.params;
+  const messageIndex = mockMessages.findIndex(msg => msg.id === messageId);
+  
+  if (messageIndex !== -1) {
+    mockMessages[messageIndex] = {
+      ...mockMessages[messageIndex],
+      isDeleted: true,
+      deleteTime: Date.now()
+    };
+    
+    res.json({
+      code: 0,
+      message: 'success',
+      data: null,
+      timestamp: Date.now()
+    });
+  } else {
+    res.status(404).json({
+      code: 404,
+      message: '消息不存在',
+      data: null
+    });
+  }
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({

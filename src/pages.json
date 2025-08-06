@@ -66,6 +66,14 @@
       }
     },
     {
+      "path": "pages/trade/buy",
+      "style": {
+        "navigationBarTitleText": "买入卖出",
+        "navigationBarBackgroundColor": "#1890ff",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/news/index",
       "style": {
         "navigationBarTitleText": "资讯",

@@ -220,7 +220,7 @@ export interface UserMessage {
   isRead: boolean
   isDeleted: boolean
   expireTime?: number
-  createTime: number
+  createdAt: number
   readTime?: number
   deleteTime?: number
   relatedId?: string

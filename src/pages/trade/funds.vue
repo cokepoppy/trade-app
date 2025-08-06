@@ -8,7 +8,7 @@
           <view class="account-header">
             <text class="account-title">资金总览</text>
             <view class="refresh-btn" @tap="refreshData">
-              <uni-icons :type="isRefreshing ? 'spinner-cycle' : 'refresh'" size="16" color="#666"></uni-icons>
+              
             </view>
           </view>
           
@@ -36,19 +36,19 @@
       <view class="actions-section">
         <view class="action-grid">
           <view class="action-item deposit" @tap="handleDeposit">
-            <uni-icons type="plusempty" size="24" color="#fff"></uni-icons>
+            
             <text class="action-text">充值</text>
           </view>
           <view class="action-item withdraw" @tap="handleWithdraw">
-            <uni-icons type="minus" size="24" color="#fff"></uni-icons>
+            
             <text class="action-text">提现</text>
           </view>
           <view class="action-item transfer" @tap="handleTransfer">
-            <uni-icons type="loop" size="24" color="#fff"></uni-icons>
+            
             <text class="action-text">转账</text>
           </view>
           <view class="action-item history" @tap="viewFundHistory">
-            <uni-icons type="list" size="24" color="#fff"></uni-icons>
+            
             <text class="action-text">明细</text>
           </view>
         </view>
@@ -59,10 +59,10 @@
           <text class="section-title">资金流水</text>
           <view class="header-actions">
             <view class="filter-btn" @tap="showFilter = true">
-              <uni-icons type="filter" size="14" color="#666"></uni-icons>
+              
             </view>
             <view class="refresh-btn" @tap="refreshData">
-              <uni-icons :type="isRefreshing ? 'spinner-cycle' : 'refresh'" size="16" color="#666"></uni-icons>
+              
             </view>
           </view>
         </view>
@@ -151,7 +151,7 @@
         
         <view v-else class="empty-state">
           <view class="empty-content">
-            <uni-icons type="wallet" size="32" color="#d9d9d9"></uni-icons>
+            
             <text class="empty-text">暂无资金流水</text>
             <text class="empty-desc">您还没有任何资金流水记录</text>
           </view>

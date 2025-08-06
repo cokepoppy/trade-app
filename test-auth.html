@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>认证测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #f6f6f6;
+            border-left: 4px solid #1890ff;
+        }
+        .error {
+            border-left-color: #ff4d4f;
+            background: #fff2f0;
+        }
+        .success {
+            border-left-color: #52c41a;
+            background: #f6ffed;
+        }
+        .test-users {
+            background: #e6f7ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>用户认证测试</h1>
+        
+        <div class="test-users">
+            <h3>测试用户：</h3>
+            <ul>
+                <li><strong>管理员:</strong> admin / admin123</li>
+                <li><strong>测试用户:</strong> testuser1 / test123</li>
+                <li><strong>演示用户:</strong> demo / demo123</li>
+            </ul>
+        </div>
+
+        <div class="form-group">
+            <label for="username">用户名:</label>
+            <input type="text" id="username" value="demo" placeholder="输入用户名">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">密码:</label>
+            <input type="password" id="password" value="demo123" placeholder="输入密码">
+        </div>
+        
+        <button onclick="login()">登录</button>
+        <button onclick="testProfile()">测试用户信息</button>
+        <button onclick="clearResults()">清除结果</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let authToken = '';
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            resultDiv.innerHTML += `<div class="result ${type}">
+                <strong>[${timestamp}]</strong> ${message}
+            </div>`;
+            
+            // 滚动到最新结果
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('result').innerHTML = '';
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            showResult(`正在登录用户: ${username}`, 'info');
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/v1/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.data.token;
+                    showResult(`登录成功! Token: ${authToken.substring(0, 50)}...`, 'success');
+                    
+                    // 保存token到localStorage
+                    localStorage.setItem('auth_token', authToken);
+                    
+                } else {
+                    showResult(`登录失败: ${data.message}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`登录请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testProfile() {
+            showResult('正在测试用户信息接口...', 'info');
+            
+            // 尝试从localStorage获取token
+            const token = authToken || localStorage.getItem('auth_token');
+            
+            if (!token) {
+                showResult('请先登录获取token', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/v1/user/current', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`用户信息获取成功! 用户: ${data.data.username}`, 'success');
+                    showResult(`用户详情: ${JSON.stringify(data.data, null, 2)}`, 'success');
+                } else {
+                    showResult(`获取用户信息失败: ${data.message}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`用户信息请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面加载时检查是否有保存的token
+        window.onload = function() {
+            const savedToken = localStorage.getItem('auth_token');
+            if (savedToken) {
+                authToken = savedToken;
+                showResult('已找到保存的token', 'success');
+            }
+        };
+    </script>
+</body>
+</html>

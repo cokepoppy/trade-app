@@ -1,7 +1,7 @@
 <template>
   <view class="empty-state">
     <view class="empty-icon">
-      <uni-icons :type="icon" size="48" color="#d9d9d9"></uni-icons>
+      
     </view>
     <text class="empty-title">{{ title }}</text>
     <text v-if="description" class="empty-description">{{ description }}</text>

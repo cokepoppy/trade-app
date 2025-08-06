@@ -281,6 +281,25 @@ export interface RequestWithUser extends Request {
   token?: string;
 }
 
+// 用户消息类型
+export interface UserMessage {
+  id: string;
+  userId: string;
+  type: 'system' | 'order' | 'deal' | 'position' | 'fund' | 'news' | 'marketing';
+  title: string;
+  content: string;
+  summary: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  isRead: boolean;
+  isDeleted: boolean;
+  expireTime?: number;
+  createdAt: number;
+  readTime?: number;
+  deleteTime?: number;
+  relatedId?: string;
+  relatedType?: string;
+}
+
 // 导出增强的 Request 类型
 export type AuthenticatedRequest = RequestWithUser;
 

@@ -8,7 +8,7 @@
           <view class="summary-header">
             <text class="summary-title">持仓总览</text>
             <view class="refresh-btn" @tap="refreshData">
-              <uni-icons :type="isRefreshing ? 'spinner-cycle' : 'refresh'" size="16" color="#666"></uni-icons>
+              
             </view>
           </view>
           
@@ -42,10 +42,10 @@
           <text class="section-title">持仓明细</text>
           <view class="header-actions">
             <view class="action-btn" @tap="navigateToMarket">
-              <uni-icons type="plus" size="14" color="#666"></uni-icons>
+              
             </view>
             <view class="action-btn" @tap="toggleSort">
-              <uni-icons :type="sortOrder === 'desc' ? 'arrowdown' : 'arrowup'" size="14" color="#666"></uni-icons>
+              
             </view>
           </view>
         </view>
@@ -64,7 +64,7 @@
               </view>
               <view class="position-actions">
                 <view class="action-icon" @tap.stop="handleSell(position)">
-                  <uni-icons type="cash" size="16" color="#ff4d4f"></uni-icons>
+                  
                 </view>
               </view>
             </view>
@@ -133,7 +133,7 @@
         
         <view v-else class="empty-state">
           <view class="empty-content">
-            <uni-icons type="info" size="32" color="#d9d9d9"></uni-icons>
+            
             <text class="empty-text">暂无持仓</text>
             <text class="empty-desc">您还没有购买任何股票</text>
             <view class="empty-action" @tap="navigateToMarket">

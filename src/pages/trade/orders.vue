@@ -41,10 +41,10 @@
         
         <view class="filter-actions">
           <view class="refresh-btn" @tap="refreshData">
-            <uni-icons :type="isRefreshing ? 'spinner-cycle' : 'refresh'" size="16" color="#666"></uni-icons>
+            
           </view>
           <view class="filter-btn" @tap="showFilter = true">
-            <uni-icons type="filter" size="16" color="#666"></uni-icons>
+            
           </view>
         </view>
       </view>
@@ -143,7 +143,7 @@
       
       <view v-else class="empty-state">
         <view class="empty-content">
-          <uni-icons type="document" size="32" color="#d9d9d9"></uni-icons>
+          
           <text class="empty-text">暂无委托记录</text>
           <text class="empty-desc">您还没有任何委托订单</text>
           <view class="empty-action" @tap="navigateToTrade">

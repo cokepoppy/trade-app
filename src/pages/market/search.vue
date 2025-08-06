@@ -7,13 +7,16 @@
           <input 
             class="search-input"
             v-model="searchKeyword"
-            placeholder="搜索股票代码/名称"
+            :placeholder="mode === 'trade' ? '选择股票' : '搜索股票代码/名称'"
             @input="onSearchInput"
             @confirm="onSearchConfirm"
             focus
           />
         </view>
-        <text class="cancel-btn" @click="goBack">取消</text>
+        <text class="cancel-btn" @click="goBack">{{ mode === 'trade' ? '取消' : '返回' }}</text>
+      </view>
+      <view v-if="mode === 'trade'" class="mode-indicator">
+        <text class="mode-text">交易模式 - 选择股票进行交易</text>
       </view>
     </view>
     
@@ -64,8 +67,10 @@
             v-for="stock in searchResults" 
             :key="stock.code"
             class="result-item"
+            :class="{ 'trade-mode': mode === 'trade' }"
+            @click="selectStock(stock)"
           >
-            <view class="stock-info" @click="selectStock(stock)">
+            <view class="stock-info">
               <text class="stock-name">{{ stock.name }}</text>
               <text class="stock-code">{{ stock.code }}</text>
             </view>
@@ -78,18 +83,17 @@
                 ({{ stock.changePercent >= 0 ? '+' : '' }}{{ stock.changePercent?.toFixed(2) || '--' }}%)
               </text>
             </view>
-            <view class="stock-actions">
+            <view v-if="mode === 'search'" class="stock-actions" @click.stop>
               <view 
                 class="add-btn" 
                 :class="{ 'added': isInWatchlist(stock.code) }"
-                @click.stop="toggleWatchlist(stock)"
+                @click="toggleWatchlist(stock)"
               >
-                <uni-icons 
-                  :type="isInWatchlist(stock.code) ? 'star-filled' : 'star'" 
-                  size="18" 
-                  :color="isInWatchlist(stock.code) ? '#ff9500' : '#999'"
-                ></uni-icons>
+                <text class="star-icon">{{ isInWatchlist(stock.code) ? '★' : '☆' }}</text>
               </view>
+            </view>
+            <view v-if="mode === 'trade'" class="trade-hint">
+              <text class="trade-hint-text">点击选择</text>
             </view>
           </view>
         </view>
@@ -122,6 +126,7 @@ const searchResults = ref<any[]>([])
 const searchHistory = ref<string[]>([])
 const loading = ref(false)
 const watchlist = ref<any[]>([])
+const mode = ref<'search' | 'trade'>('search')
 
 const hotSearches = [
   '贵州茅台',
@@ -164,6 +169,27 @@ const performSearch = async () => {
     // 模拟搜索结果，用于测试自选股功能
     const mockResults = [
       {
+        code: '600519',
+        name: '贵州茅台',
+        price: 1685.50,
+        change: 15.20,
+        changePercent: 0.91
+      },
+      {
+        code: '300750',
+        name: '宁德时代',
+        price: 245.80,
+        change: -3.20,
+        changePercent: -1.29
+      },
+      {
+        code: '002594',
+        name: '比亚迪',
+        price: 268.40,
+        change: 5.60,
+        changePercent: 2.13
+      },
+      {
         code: '000001',
         name: '平安银行',
         price: 12.58,
@@ -183,6 +209,48 @@ const performSearch = async () => {
         price: 35.67,
         change: 0.52,
         changePercent: 1.48
+      },
+      {
+        code: '601318',
+        name: '中国平安',
+        price: 52.30,
+        change: -0.80,
+        changePercent: -1.51
+      },
+      {
+        code: '00700',
+        name: '腾讯控股',
+        price: 385.20,
+        change: 8.40,
+        changePercent: 2.23
+      },
+      {
+        code: '09988',
+        name: '阿里巴巴',
+        price: 85.60,
+        change: -1.20,
+        changePercent: -1.38
+      },
+      {
+        code: '03690',
+        name: '美团',
+        price: 112.40,
+        change: 2.80,
+        changePercent: 2.56
+      },
+      {
+        code: '09618',
+        name: '京东',
+        price: 145.30,
+        change: -2.10,
+        changePercent: -1.43
+      },
+      {
+        code: 'PDD',
+        name: '拼多多',
+        price: 98.70,
+        change: 3.50,
+        changePercent: 3.67
       }
     ].filter(stock => 
       stock.name.includes(keyword) || stock.code.includes(keyword)
@@ -230,10 +298,16 @@ const selectHot = (keyword: string) => {
 }
 
 const selectStock = (stock: any) => {
-  // 跳转到股票详情页
-  uni.navigateTo({
-    url: `/pages/market/detail?code=${stock.code}`
-  })
+  if (mode.value === 'trade') {
+    // 交易模式：返回股票数据给交易页面
+    uni.$emit('stockSelected', stock)
+    uni.navigateBack()
+  } else {
+    // 搜索模式：跳转到股票详情页
+    uni.navigateTo({
+      url: `/pages/market/detail?code=${stock.code}`
+    })
+  }
 }
 
 const clearHistory = () => {
@@ -302,6 +376,18 @@ const toggleWatchlist = async (stock: any) => {
 }
 
 onMounted(() => {
+  // 获取页面参数
+  const pages = getCurrentPages()
+  if (pages.length > 0) {
+    const currentPage = pages[pages.length - 1] as any
+    const options = currentPage.options || {}
+    
+    // 检查是否是交易模式
+    if (options.mode === 'trade') {
+      mode.value = 'trade'
+    }
+  }
+  
   // 加载搜索历史
   const history = uni.getStorageSync('search_history')
   if (history) {
@@ -357,6 +443,18 @@ onMounted(() => {
   font-size: 28rpx;
   color: #1890ff;
   padding: 10rpx;
+}
+
+.mode-indicator {
+  background-color: #fff4e6;
+  padding: 12rpx 20rpx;
+  border-bottom: 1px solid #ffe7ba;
+}
+
+.mode-text {
+  font-size: 24rpx;
+  color: #fa8c16;
+  font-weight: 500;
 }
 
 .search-content {
@@ -446,10 +544,25 @@ onMounted(() => {
   align-items: center;
   padding: 30rpx;
   border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .result-item:last-child {
   border-bottom: none;
+}
+
+.result-item:active {
+  background-color: #f5f5f5;
+}
+
+.result-item.trade-mode {
+  background-color: #fff9f0;
+  border-left: 4px solid #fa8c16;
+}
+
+.result-item.trade-mode:active {
+  background-color: #fff4e6;
 }
 
 .stock-actions {
@@ -476,6 +589,30 @@ onMounted(() => {
 
 .add-btn.added {
   background-color: #fff4e6;
+}
+
+.star-icon {
+  font-size: 18px;
+  color: #999;
+}
+
+.add-btn.added .star-icon {
+  color: #ff9500;
+}
+
+.trade-hint {
+  display: flex;
+  align-items: center;
+  margin-left: 20rpx;
+}
+
+.trade-hint-text {
+  font-size: 24rpx;
+  color: #fa8c16;
+  background-color: #fff4e6;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  border: 1px solid #ffe7ba;
 }
 
 .stock-info {

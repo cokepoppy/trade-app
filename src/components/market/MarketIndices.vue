@@ -3,7 +3,7 @@
     <view class="indices-header">
       <text class="section-title">市场指数</text>
       <view class="refresh-btn" @tap="handleRefresh">
-        <uni-icons :type="isRefreshing ? 'spinner-cycle' : 'refresh'" size="16" color="#666"></uni-icons>
+        
       </view>
     </view>
     
@@ -41,7 +41,7 @@
     
     <view class="indices-footer" @tap="handleViewAll">
       <text class="view-all-text">查看全部指数</text>
-      <uni-icons type="arrowright" size="14" color="#666"></uni-icons>
+      
     </view>
   </view>
 </template>

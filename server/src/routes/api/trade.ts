@@ -17,7 +17,8 @@ router.get('/accounts', (req, res) => {
         frozen: 5000.00,
         marketValue: 50000.00,
         totalAssets: 150000.00,
-        status: 'active'
+        status: 'active',
+        availableFunds: 95000.00
       }
     ]
   });
@@ -38,6 +39,29 @@ router.get('/accounts/:accountId', (req, res) => {
       marketValue: 50000.00,
       totalAssets: 150000.00,
       status: 'active',
+      availableFunds: 95000.00,
+      createTime: Date.now()
+    }
+  });
+});
+
+// Additional endpoint for getAccountInfo that returns availableFunds
+router.get('/accounts/:accountId/info', (req, res) => {
+  const { accountId } = req.params;
+  res.json({
+    code: 0,
+    message: '成功',
+    data: {
+      id: accountId,
+      name: '主账户',
+      type: 'stock',
+      balance: 100000.00,
+      available: 95000.00,
+      frozen: 5000.00,
+      marketValue: 50000.00,
+      totalAssets: 150000.00,
+      status: 'active',
+      availableFunds: 95000.00,
       createTime: Date.now()
     }
   });
@@ -71,6 +95,7 @@ router.get('/positions', (req, res) => {
         name: '平安银行',
         quantity: 1000,
         availableQuantity: 1000,
+        availableShares: 1000,
         frozenQuantity: 0,
         avgPrice: 12.00,
         currentPrice: 12.34,

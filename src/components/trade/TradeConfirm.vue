@@ -5,7 +5,7 @@
       <view class="confirm-header">
         <text class="confirm-title">交易确认</text>
         <view class="close-btn" @tap="handleClose">
-          <uni-icons type="close" size="20" color="#666"></uni-icons>
+          
         </view>
       </view>
       
@@ -68,7 +68,7 @@
         
         <view v-if="showRiskWarning" class="risk-warning">
           <view class="warning-header">
-            <uni-icons type="info" size="16" color="#faad14"></uni-icons>
+            
             <text class="warning-title">风险提示</text>
           </view>
           <text class="warning-text">{{ riskWarningText }}</text>

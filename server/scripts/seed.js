@@ -1,5 +1,6 @@
 const { database } = require('../src/utils/database');
 const { userModel, userProfileModel, userSettingsModel } = require('../src/models/entities/User');
+const { userMessageModel } = require('../src/models/entities/UserMessage');
 const logger = require('../src/utils/logger');
 
 /**
@@ -10,6 +11,7 @@ class Seeder {
     this.users = [];
     this.profiles = [];
     this.settings = [];
+    this.messages = [];
   }
 
   /**
@@ -36,10 +38,14 @@ class Seeder {
       // 生成用户设置
       await this.generateUserSettings();
 
+      // 生成用户消息
+      await this.generateUserMessages();
+
       logger.info('数据库种子数据生成完成');
       logger.info(`生成用户: ${this.users.length} 个`);
       logger.info(`生成用户资料: ${this.profiles.length} 个`);
       logger.info(`生成用户设置: ${this.settings.length} 个`);
+      logger.info(`生成用户消息: ${this.messages.length} 个`);
 
     } catch (error) {
       logger.error('数据库种子数据生成失败', error);
@@ -335,6 +341,72 @@ class Seeder {
       } catch (error) {
         logger.error(`创建用户设置失败: ${user.username}`, error);
       }
+    }
+  }
+
+  /**
+   * 生成用户消息
+   */
+  async generateUserMessages() {
+    const messageTypes = ['system', 'order', 'deal', 'position', 'fund', 'news', 'marketing'];
+    const priorities = ['low', 'medium', 'high', 'urgent'];
+    
+    for (const user of this.users) {
+      const userMessages = [];
+      
+      // 为每个用户生成3-8条消息
+      const messageCount = Math.floor(Math.random() * 6) + 3;
+      
+      for (let i = 0; i < messageCount; i++) {
+        const type = messageTypes[Math.floor(Math.random() * messageTypes.length)];
+        const priority = priorities[Math.floor(Math.random() * priorities.length)];
+        const isRead = Math.random() > 0.6; // 40%的消息未读
+        
+        const messageTitles = {
+          system: '系统通知',
+          order: '订单通知',
+          deal: '成交通知',
+          position: '持仓通知',
+          fund: '资金通知',
+          news: '资讯通知',
+          marketing: '营销通知'
+        };
+        
+        const messageContents = {
+          system: '您的账户安全验证已通过，请继续使用。',
+          order: '您的限价买单已提交，请等待成交。',
+          deal: '您的股票交易已成功成交。',
+          position: '您的持仓股票价格波动较大，请关注。',
+          fund: '您的账户资金变动已完成。',
+          news: '市场热点更新，请查看最新资讯。',
+          marketing: '新用户专享福利，限时优惠活动进行中。'
+        };
+        
+        const messageData = {
+          user_id: user.id,
+          type: type,
+          title: messageTitles[type],
+          content: messageContents[type],
+          summary: messageContents[type].substring(0, 50) + '...',
+          priority: priority,
+          is_read: isRead,
+          is_deleted: false,
+          created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000), // 过去7天内
+          read_time: isRead ? new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000) : null,
+          related_id: null,
+          related_type: null
+        };
+        
+        try {
+          const message = await userMessageModel.create(messageData);
+          userMessages.push(message);
+        } catch (error) {
+          logger.error(`创建用户消息失败: ${user.username}`, error);
+        }
+      }
+      
+      this.messages.push(...userMessages);
+      logger.info(`创建用户消息: ${user.username} - ${userMessages.length} 条`);
     }
   }
 }

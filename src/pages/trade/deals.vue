@@ -8,7 +8,7 @@
           <view class="summary-header">
             <text class="summary-title">今日成交统计</text>
             <view class="refresh-btn" @tap="refreshData">
-              <uni-icons :type="isRefreshing ? 'spinner-cycle' : 'refresh'" size="16" color="#666"></uni-icons>
+              
             </view>
           </view>
           
@@ -40,11 +40,11 @@
           <text class="filter-title">成交记录</text>
           <view class="filter-actions">
             <view class="date-btn" @tap="showDatePicker = true">
-              <uni-icons type="calendar" size="14" color="#666"></uni-icons>
+              
               <text class="date-text">{{ selectedDate }}</text>
             </view>
             <view class="refresh-btn" @tap="refreshData">
-              <uni-icons :type="isRefreshing ? 'spinner-cycle' : 'refresh'" size="16" color="#666"></uni-icons>
+              
             </view>
           </view>
         </view>
@@ -145,7 +145,7 @@
       
       <view v-else class="empty-state">
         <view class="empty-content">
-          <uni-icons type="checkmarkempty" size="32" color="#d9d9d9"></uni-icons>
+          
           <text class="empty-text">暂无成交记录</text>
           <text class="empty-desc">您还没有任何成交记录</text>
           <view class="empty-action" @tap="navigateToTrade">

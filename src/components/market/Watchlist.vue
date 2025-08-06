@@ -4,10 +4,10 @@
       <text class="section-title">自选股</text>
       <view class="header-actions">
         <view class="action-btn" @click="handleAddStock">
-          <uni-icons type="plus" size="16" color="#666"></uni-icons>
+          
         </view>
         <view class="action-btn" @click="handleManage">
-          <uni-icons type="gear" size="16" color="#666"></uni-icons>
+          
         </view>
       </view>
     </view>
@@ -38,7 +38,7 @@
         
         <view class="stock-actions">
           <view class="action-icon" @click.stop="handleRemoveStock(stock)">
-            <uni-icons type="close" size="14" color="#999"></uni-icons>
+            
           </view>
         </view>
       </view>
@@ -46,7 +46,7 @@
     
     <view v-else class="empty-state" @click="handleAddStock">
       <view class="empty-content">
-        <uni-icons type="star" size="32" color="#d9d9d9"></uni-icons>
+        
         <text class="empty-text">暂无自选股</text>
         <text class="empty-desc">点击添加按钮添加自选股</text>
       </view>
@@ -54,7 +54,7 @@
     
     <view v-if="watchlistItems.length > 0" class="watchlist-footer" @click="handleViewAll">
       <text class="view-all-text">查看全部自选股</text>
-      <uni-icons type="arrowright" size="14" color="#666"></uni-icons>
+      
     </view>
   </view>
 </template>

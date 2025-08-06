@@ -76,17 +76,34 @@ export const useUserStore = defineStore('user', () => {
       const savedToken = storage.get(storageKeys.USER_TOKEN)
       const savedUser = storage.get(storageKeys.USER_INFO)
       
+      console.log('[DEBUG] User store initialization')
+      console.log('[DEBUG] Saved token exists:', !!savedToken)
+      console.log('[DEBUG] Saved user exists:', !!savedUser)
+      
       if (savedToken && savedUser) {
         token.value = savedToken
         user.value = savedUser
         isAuthenticated.value = true
         
-        await Promise.all([
-          fetchUserProfile(),
-          fetchUserSettings(),
-          fetchUserDevices(),
-          fetchUnreadMessages()
-        ])
+        console.log('[DEBUG] User authenticated, user info:', savedUser)
+        
+        // 延迟加载其他数据，避免阻塞主界面
+        setTimeout(async () => {
+          try {
+            await Promise.all([
+              fetchUserProfile(),
+              fetchUserSettings(),
+              fetchUserDevices(),
+              fetchUnreadMessages()
+            ])
+          } catch (err) {
+            console.error('Delayed user data loading error:', err)
+            // 如果API调用失败，不影响基本的登录状态
+          }
+        }, 1000)
+      } else {
+        console.log('[DEBUG] No saved token or user info, user not authenticated')
+        isAuthenticated.value = false
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : '初始化用户数据失败'

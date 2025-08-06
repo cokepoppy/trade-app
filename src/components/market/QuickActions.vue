@@ -8,7 +8,7 @@
         @tap="handleActionClick(action)"
       >
         <view class="action-icon-wrapper" :class="action.type">
-          <uni-icons :type="action.icon" size="24" :color="action.color"></uni-icons>
+          
         </view>
         <text class="action-text">{{ action.name }}</text>
       </view>

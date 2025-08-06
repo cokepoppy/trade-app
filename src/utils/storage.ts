@@ -183,6 +183,7 @@ export const cache = {
 
 export const storageKeys = {
   USER_TOKEN: 'user_token',
+  REFRESH_TOKEN: 'refresh_token',
   USER_INFO: 'user_info',
   WATCHLIST: 'watchlist',
   TRADE_SETTINGS: 'trade_settings',

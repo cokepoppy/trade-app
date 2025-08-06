@@ -11,13 +11,13 @@
     <!-- 导航栏 -->
     <view class="nav-bar">
       <view class="nav-left" @click="goBack">
-        <uni-icons type="arrowleft" size="24" color="#333"></uni-icons>
+        
       </view>
       <view class="nav-title">
         <text class="nav-title-text">{{ stockDetail?.name || '股票详情' }}</text>
       </view>
       <view class="nav-right">
-        <uni-icons type="more" size="24" color="#333"></uni-icons>
+        
       </view>
     </view>
 
@@ -51,11 +51,7 @@
           </view>
         </view>
         <view class="watchlist-btn" @click="toggleWatchlist">
-          <uni-icons 
-            :type="isInWatchlist ? 'star-filled' : 'star'" 
-            size="24" 
-            :color="isInWatchlist ? '#ff9500' : '#999'"
-          ></uni-icons>
+          <text class="watchlist-icon">{{ isInWatchlist ? '★' : '☆' }}</text>
           <text class="watchlist-text">{{ isInWatchlist ? '已添加' : '添加自选' }}</text>
         </view>
       </view>
@@ -99,7 +95,7 @@
         <view class="chart-container">
           <canvas canvas-id="time-share-chart" class="chart-canvas"></canvas>
           <view v-if="loading" class="chart-loading">
-            <uni-icons type="spinner-cycle" size="24" color="#999"></uni-icons>
+            
             <text class="loading-text">加载中...</text>
           </view>
         </view>
@@ -135,7 +131,7 @@
         <view class="chart-container">
           <canvas canvas-id="kline-chart" class="chart-canvas"></canvas>
           <view v-if="loading" class="chart-loading">
-            <uni-icons type="spinner-cycle" size="24" color="#999"></uni-icons>
+            
             <text class="loading-text">加载中...</text>
           </view>
         </view>
@@ -1094,6 +1090,15 @@ onUnmounted(() => {
 }
 
 .watchlist-btn.added .watchlist-text {
+  color: #ff9500;
+}
+
+.watchlist-icon {
+  font-size: 24px;
+  color: #999;
+}
+
+.watchlist-btn.added .watchlist-icon {
   color: #ff9500;
 }
 

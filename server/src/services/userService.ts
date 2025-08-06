@@ -17,6 +17,7 @@ import {
   userProfileRepository, 
   userSettingsRepository 
 } from '../models/index';
+import { userMessageRepository } from '../models/UserMessageRepository';
 import { redisClient } from '../utils/redis';
 import { memoryStorage } from '../utils/memoryStorage';
 import logger from '../utils/logger';
@@ -67,7 +68,7 @@ export class UserService {
       }
 
       // 检查是否需要验证码
-      if (options.captcha && process.env.NODE_ENV !== 'test') {
+      if (options.captcha && process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'development') {
         const isValidCaptcha = await this.validateCaptcha(username, options.captcha);
         if (!isValidCaptcha) {
           throw new AppError(401, '验证码错误');
@@ -777,6 +778,128 @@ export class UserService {
       };
     } catch (error) {
       logger.error('获取用户活动记录失败', { userId, params, error });
+      throw error;
+    }
+  }
+
+  /**
+   * 获取用户消息
+   */
+  async getUserMessages(userId: string, params: PaginationParams & { type?: string; isRead?: boolean; priority?: string }): Promise<PaginationResult<any>> {
+    try {
+      const messages = await userMessageRepository.findByUserId(userId, params);
+      return messages;
+    } catch (error) {
+      logger.error('获取用户消息失败', { userId, params, error });
+      throw error;
+    }
+  }
+
+  /**
+   * 获取用户未读消息
+   */
+  async getUnreadMessages(userId: string): Promise<any[]> {
+    try {
+      const messages = await userMessageRepository.findUnreadByUserId(userId);
+      return messages;
+    } catch (error) {
+      logger.error('获取用户未读消息失败', { userId, error });
+      throw error;
+    }
+  }
+
+  /**
+   * 获取消息详情
+   */
+  async getMessage(userId: string, messageId: string): Promise<any> {
+    try {
+      const message = await userMessageRepository.findById(messageId);
+      if (!message) {
+        throw new AppError(404, '消息不存在');
+      }
+      if (message.userId !== userId) {
+        throw new AppError(403, '无权访问此消息');
+      }
+      return message;
+    } catch (error) {
+      logger.error('获取消息详情失败', { userId, messageId, error });
+      throw error;
+    }
+  }
+
+  /**
+   * 标记消息为已读
+   */
+  async markMessageAsRead(userId: string, messageId: string): Promise<void> {
+    try {
+      await userMessageRepository.markAsRead(messageId, userId);
+      logger.info('标记消息为已读成功', { userId, messageId });
+    } catch (error) {
+      logger.error('标记消息为已读失败', { userId, messageId, error });
+      throw error;
+    }
+  }
+
+  /**
+   * 标记所有消息为已读
+   */
+  async markAllMessagesAsRead(userId: string): Promise<void> {
+    try {
+      await userMessageRepository.markAllAsRead(userId);
+      logger.info('标记所有消息为已读成功', { userId });
+    } catch (error) {
+      logger.error('标记所有消息为已读失败', { userId, error });
+      throw error;
+    }
+  }
+
+  /**
+   * 删除消息
+   */
+  async deleteMessage(userId: string, messageId: string): Promise<void> {
+    try {
+      await userMessageRepository.delete(messageId, userId);
+      logger.info('删除消息成功', { userId, messageId });
+    } catch (error) {
+      logger.error('删除消息失败', { userId, messageId, error });
+      throw error;
+    }
+  }
+
+  /**
+   * 获取未读消息数量
+   */
+  async getUnreadMessageCount(userId: string): Promise<number> {
+    try {
+      const count = await userMessageRepository.getUnreadCount(userId);
+      return count;
+    } catch (error) {
+      logger.error('获取未读消息数量失败', { userId, error });
+      throw error;
+    }
+  }
+
+  /**
+   * 创建系统消息
+   */
+  async createSystemMessage(userId: string, messageData: {
+    title: string;
+    content: string;
+    summary?: string;
+    priority?: 'low' | 'medium' | 'high' | 'urgent';
+    relatedId?: string;
+    relatedType?: string;
+  }): Promise<any> {
+    try {
+      const message = await userMessageRepository.create({
+        userId,
+        type: 'system',
+        ...messageData
+      });
+      logger.info('创建系统消息成功', { userId, messageId: message.id });
+      return message;
+    } catch (error) {
+      logger.error('创建系统消息失败', { userId, messageData, error });
       throw error;
     }
   }

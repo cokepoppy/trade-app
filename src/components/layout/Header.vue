@@ -12,10 +12,10 @@
     <view class="header-right">
       <view class="header-actions">
         <view class="action-item" @tap="handleSearch">
-          <uni-icons type="search" size="20" color="#666"></uni-icons>
+          
         </view>
         <view class="action-item" @tap="handleMessage">
-          <uni-icons type="notification" size="20" color="#666"></uni-icons>
+          
           <view v-if="unreadCount > 0" class="badge">{{ unreadCount }}</view>
         </view>
       </view>

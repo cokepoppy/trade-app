@@ -558,6 +558,136 @@ export class UserController {
       timestamp: Date.now()
     });
   });
+
+  /**
+   * 获取用户消息
+   */
+  getUserMessages = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?.id;
+    const { page = 1, pageSize = 20, type, isRead, priority } = req.query;
+
+    if (!userId) {
+      throw createAppError(401, '未授权访问');
+    }
+
+    const messages = await userService.getUserMessages(userId, {
+      page: Number(page),
+      pageSize: Number(pageSize),
+      type: type as string,
+      isRead: isRead === 'true' ? true : isRead === 'false' ? false : undefined,
+      priority: priority as string
+    });
+
+    res.json({
+      code: 0,
+      message: '获取用户消息成功',
+      data: messages,
+      timestamp: Date.now()
+    });
+  });
+
+  /**
+   * 获取消息详情
+   */
+  getMessage = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?.id;
+    const { messageId } = req.params;
+
+    if (!userId) {
+      throw createAppError(401, '未授权访问');
+    }
+
+    const message = await userService.getMessage(userId, messageId);
+
+    res.json({
+      code: 0,
+      message: '获取消息详情成功',
+      data: message,
+      timestamp: Date.now()
+    });
+  });
+
+  /**
+   * 标记消息为已读
+   */
+  markMessageAsRead = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?.id;
+    const { messageId } = req.params;
+
+    if (!userId) {
+      throw createAppError(401, '未授权访问');
+    }
+
+    await userService.markMessageAsRead(userId, messageId);
+
+    res.json({
+      code: 0,
+      message: '标记消息为已读成功',
+      data: null,
+      timestamp: Date.now()
+    });
+  });
+
+  /**
+   * 标记所有消息为已读
+   */
+  markAllMessagesAsRead = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw createAppError(401, '未授权访问');
+    }
+
+    await userService.markAllMessagesAsRead(userId);
+
+    res.json({
+      code: 0,
+      message: '标记所有消息为已读成功',
+      data: null,
+      timestamp: Date.now()
+    });
+  });
+
+  /**
+   * 删除消息
+   */
+  deleteMessage = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?.id;
+    const { messageId } = req.params;
+
+    if (!userId) {
+      throw createAppError(401, '未授权访问');
+    }
+
+    await userService.deleteMessage(userId, messageId);
+
+    res.json({
+      code: 0,
+      message: '删除消息成功',
+      data: null,
+      timestamp: Date.now()
+    });
+  });
+
+  /**
+   * 获取未读消息
+   */
+  getUnreadMessages = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw createAppError(401, '未授权访问');
+    }
+
+    const messages = await userService.getUnreadMessages(userId);
+
+    res.json({
+      code: 0,
+      message: '获取未读消息成功',
+      data: messages,
+      timestamp: Date.now()
+    });
+  });
 }
 
 // 导出控制器实例
